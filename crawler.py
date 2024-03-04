@@ -4,6 +4,9 @@ import csv
 def filter_message(string, substring):
     return [str for str in string if any(sub in str for sub in substring)]
 
+def extract_val_from_str(string):
+    
+
 class Weapon:
     def __init__(self, name, description, da, dc, location, price, required_items, sellback,
                  level, damage_min, damage_max, element,
@@ -11,6 +14,7 @@ class Weapon:
                  melee_def, pierce_def, magic_def, block, parry, dodge, crit, bonus,
 
                  rarity, item_type, damage_type):
+        
         self.name = ""
         self.description = ""
         self.da = False
@@ -38,7 +42,9 @@ class Weapon:
         self.dodge = 0
         self.crit = 0
         self.bonus = 0
-
+        self.rarity = 0
+        self.item_type = ""
+        self.damage_type = ""
 
 class ForumSpider(scrapy.Spider):
     name = 'forum-spider'
