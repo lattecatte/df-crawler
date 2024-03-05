@@ -26,7 +26,7 @@ class Weapon:
         self.sellback = []
         self.level = 0
         self.damage_min = 0
-        # self.damage_max = 0
+        self.damage_max = 0
         # self.element = ""
         # self.strength = 0
         # self.dexterity = 0
@@ -74,7 +74,9 @@ class Weapon:
         print("Required Items:", self.required_items)
         print("Sellback:", self.sellback)
         print("Level:", self.level)
-        print("Damage MIN:", self.damage_min)
+        # print("Damage MIN:", self.damage_min)
+        # print("Damage MAX:", self.damage_max)
+        print("Damage:", self.damage_min, "-", self.damage_max)
 
 class ForumSpider(scrapy.Spider):
     name = 'forum-spider'
@@ -136,9 +138,11 @@ class ForumSpider(scrapy.Spider):
 
                             # special case for damage (extracting min and max dmg)
                             if n == 5:
-                                min_dmg = item_info[index].split("-")[0]
+                                dmg_min = item_info[index].split("-")[0]
+                                dmg_max = item_info[index].split("-")[1]
+                                weapons[obj_name].damage_min = dmg_min
+                                weapons[obj_name].damage_max = dmg_max
                                 
-
                             # saving properly formatted value to object property
                             else:
                                 weapons[obj_name].add_info_by_index(n, item_info[index])
