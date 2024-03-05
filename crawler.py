@@ -20,12 +20,12 @@ class Weapon:
         self.description = ""
         # self.da = False
         # self.dc = False
-        # self.location = ""
-        # self.price = 0
-        # self.required_items = ""
-        # self.sellback = 0
-        # self.level = 0
-        # self.damage_min = 0
+        self.location = []
+        self.price = [] # array because multiple sources of the weapon
+        self.required_items = []
+        self.sellback = []
+        self.level = 0
+        self.damage_min = 0
         # self.damage_max = 0
         # self.element = ""
         # self.strength = 0
@@ -50,6 +50,31 @@ class Weapon:
     def add_info(self, name, description):
         self.name = name
         self.description = description
+
+# "Location: ", "Price: ", "Required Items: ", "Sellback: ",  "Level: ", "Damage: ", "Element: ",
+# "Bonuses: ", "Resists: ", "Rarity: ", "Item Type: ", "Damage Type: "
+    def add_info_by_index(self, integer, value):
+        if integer == 0:
+            self.location.append(value)
+        elif integer == 1:
+            self.price.append(value)
+        elif integer == 2:
+            self.required_items.append(value)
+        elif integer == 3:
+            self.sellback.append(value)
+        elif integer == 4:
+            self.level = value
+        # elif integer == 5:
+        #     self.damage =
+        
+    def print_properties(self):
+        print("Name:", self.name)
+        print("Description:", self.description)
+        print("Price:", self.price)
+        print("Required Items:", self.required_items)
+        print("Sellback:", self.sellback)
+        print("Level:", self.level)
+        print("Damage MIN:", self.damage_min)
 
 class ForumSpider(scrapy.Spider):
     name = 'forum-spider'
@@ -101,19 +126,38 @@ class ForumSpider(scrapy.Spider):
                 item_info = filter_message(item_info, categories)
 
                 # removing the category strings and saving them into object properties
+
                 for index, value in enumerate(item_info):
                     # iterating multiple if statements through categories[i]
-                    for n in range(len(categories)):
+                    for n in range(len(categories)): 
                         if categories[n] in value:
+                            # removing category strings
                             item_info[index] = value.replace(categories[n], "")
+
+                            # special case for damage (extracting min and max dmg)
+                            if n == 5:
+                                min_dmg = item_info[index].split("-")[0]
+                                
+
+                            # saving properly formatted value to object property
+                            else:
+                                weapons[obj_name].add_info_by_index(n, item_info[index])
+
+                # for index, value in enumerate(item_info)[0:6]:
+                #     # Price
+                #     if categories[1] in value:
+                #         item_info[index] = value.replace(categories[1], "")
+                #         weapons[obj_name].add_info_by_index(1, item_info[index])
+
+
                             
 
                 print("+++++++++++++++++++++++++++++++++++++")
-                print(item_name)
-                print(item_description)
+                print(url)
+                weapons[obj_name].print_properties()
+                print("------")
                 print(item_info)
 
-                print(weapons[obj_name].name, weapons[obj_name].description)
 
                 csv_line.writerow(item_info)
                 print("+++++++++++++++++++++++++++++++++++++")
