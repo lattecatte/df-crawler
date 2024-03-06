@@ -5,7 +5,7 @@ weapons = dict()
 
 # filter main_list to only contain elements that are available in sub_list
 def filter_message(main_list, sub_list):
-    return [m for m in main_list if any(s in m for s in sub_list)]
+    return [m for m in main_list if any(m.startswith(s) for s in sub_list)]
 
 class Weapon:
     def __init__(self):
@@ -27,7 +27,8 @@ class Weapon:
         self.level = 0
         self.damage_min = 0
         self.damage_max = 0
-        # self.element = ""
+        self.element = ""
+        self.bonuses = []
         # self.strength = 0
         # self.dexterity = 0
         # self.intellect = 0
@@ -43,16 +44,24 @@ class Weapon:
         # self.dodge = 0
         # self.crit = 0
         # self.bonus = 0
-        # self.rarity = 0
-        # self.item_type = ""
-        # self.damage_type = ""
+        self.resists = []
+        self.rarity = 0
+        self.item_type = ""
+        self.damage_type = ""
 
-    def add_info(self, name, description):
+        self.special = False
+        self.special_name = ""
+        self.special_activation = ""
+        self.special_damage = ""
+        self.special_effect = ""
+        self.special_element = ""
+        self.special_damage_type = ""
+        self.special_rate = ""
+        
+    def add_name_description(self, name, description):
         self.name = name
         self.description = description
 
-# "Location: ", "Price: ", "Required Items: ", "Sellback: ",  "Level: ", "Damage: ", "Element: ",
-# "Bonuses: ", "Resists: ", "Rarity: ", "Item Type: ", "Damage Type: "
     def add_info_by_index(self, integer, value):
         if integer == 0:
             self.location.append(value)
@@ -64,8 +73,15 @@ class Weapon:
             self.sellback.append(value)
         elif integer == 4:
             self.level = value
-        # elif integer == 5:
-        #     self.damage =
+        elif integer == 6:
+            self.element = value
+        elif integer == 10:
+            self.rarity = value
+        elif integer == 11:
+            self.item_type = value
+        elif integer == 12:
+            self.damage_type = value
+
         
     def print_properties(self):
         print("Name:", self.name)
@@ -77,6 +93,21 @@ class Weapon:
         # print("Damage MIN:", self.damage_min)
         # print("Damage MAX:", self.damage_max)
         print("Damage:", self.damage_min, "-", self.damage_max)
+        print("Element:", self.element)
+        print("Bonuses:", self.bonuses)
+        print("Resists:", self.resists)
+        print("Rarity:", self.rarity)
+        print("Item Type:", self.item_type)
+        print("Damage Type:", self.damage_type)
+        
+        if self.special == True:
+            print("Special Name:", self.special_name)
+            print("Special Activation:", self.special_activation)
+            print("Special Damage:", self.special_damage)
+            print("Special Effect:", self.special_effect)
+            print("Special Element:", self.special_element)
+            print("Special Damage Type:", self.special_damage_type)
+            print("Special Rate:", self.special_rate)
 
 class ForumSpider(scrapy.Spider):
     name = 'forum-spider'
@@ -85,7 +116,7 @@ class ForumSpider(scrapy.Spider):
     # parsing A-Z page
     def parse(self, response):
         # get item path from DOM tree <td class="msg"> <a>
-        az_item_path = response.xpath("//td[@class='msg']/a")[100:105]
+        az_item_path = response.xpath("//td[@class='msg']/a")[110:120]
 
         for item in az_item_path:
             # get item name from <td class="msg"> <a> text
@@ -120,11 +151,14 @@ class ForumSpider(scrapy.Spider):
                 item_description = message.xpath("font/following-sibling::i[1]/text()").getall()
                 item_description = [i.encode("utf-8") for i in item_description]
                 # assign object properties
-                weapons[obj_name].add_info(item_name, item_description)
+                weapons[obj_name].add_name_description(item_name, item_description)
 
                 # get item info from main message path <td class="msg"> text and filter relevant categories
                 item_info = message.xpath("text()").getall()
-                categories = ["Location: ", "Price: ", "Required Items: ", "Sellback: ",  "Level: ", "Damage: ", "Element: ", "Bonuses: ", "Resists: ", "Rarity: ", "Item Type: ", "Damage Type: "]
+                # sometimes the category "Bonuses:" is listed as "Stats:" on the forums
+                categories = [" Location:", " Price:", " Required Items:", " Sellback:",  " Level:", " Damage:", " Element:",
+                              " Bonuses:", " Stats:", " Resists:", " Rarity:", " Item Type:", " Damage Type:",
+                              " Special Name:", " Special Activation:", " Special Damage:", " Special Effect:", " Special Element:", " Special Rate:"]
                 item_info = filter_message(item_info, categories)
 
                 # removing the category strings and saving them into object properties
@@ -143,6 +177,16 @@ class ForumSpider(scrapy.Spider):
                                 weapons[obj_name].damage_min = dmg_min
                                 weapons[obj_name].damage_max = dmg_max
                                 
+                            # special case for bonuses
+                            elif n == 7 or n == 8:
+                                bonuses = item_info[index].split(",")
+                                weapons[obj_name].bonuses = bonuses
+
+                            # special case for resists
+                            elif n == 9:
+                                resists = item_info[index].split(",")
+                                weapons[obj_name].resists = resists
+
                             # saving properly formatted value to object property
                             else:
                                 weapons[obj_name].add_info_by_index(n, item_info[index])
@@ -160,7 +204,7 @@ class ForumSpider(scrapy.Spider):
                 print(url)
                 weapons[obj_name].print_properties()
                 print("------")
-                print(item_info)
+                # print(item_info)
 
 
                 csv_line.writerow(item_info)
