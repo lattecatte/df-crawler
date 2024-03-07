@@ -14,8 +14,8 @@ category_attr = ["location", "price", "required_items", "sellback",
                  "bonuses", "bonuses", "resists", "rarity", "item_type", "damage_type",
                  "special_name", "special_activation", "special_damage", "special_effect", "special_element", "special_damage_type", "special_rate"]
 
-stats_list = ["STR", "DEX", "INT", "CHA", "LUK", "END", "WIS",
-              "Melee Def", "Pierce Def", "Magic Def", "Block", "Parry", "Dodge", "Crit", "Bonus"]
+stats_list = [" STR", " DEX", " INT", " CHA", " LUK", " END", " WIS",
+              " Melee Def", " Pierce Def", " Magic Def", " Block", " Parry", " Dodge", " Crit", " Bonus"]
 stats_attr = ["strength", "dexterity", "intellect", "charisma", "luck", "endurance", "wisdom",
               "melee_def", "pierce_def", "magic_def", "block", "parry", "dodge", "crit", "bonus"]
 
@@ -84,6 +84,7 @@ class Weapon:
         self.description = description
 
     def print_properties(self):
+        # needs a function that auto converts attr names into strings to print
         print("Name:", self.name)
         print("Description:", self.description)
         print("Location:", self.location)
@@ -94,6 +95,23 @@ class Weapon:
         print("Damage:", self.damage_min, "-", self.damage_max)
         print("Element:", self.element)
         print("Bonuses:", self.bonuses)
+        # stats
+        print("STR:", self.strength)
+        print("DEX:", self.dexterity)
+        print("INT:", self.intellect)
+        print("CHA:", self.charisma)
+        print("LUK:", self.luck)
+        print("END:", self.endurance)
+        print("WIS:", self.wisdom)
+        print("Melee Def:", self.melee_def)
+        print("Pierce Def:", self.pierce_def)
+        print("Magic Def:", self.magic_def)
+        print("Block:", self.block)
+        print("Parry:", self.parry)
+        print("Dodge:", self.dodge)
+        print("Crit:", self.crit)
+        print("Bonus:", self.bonus)
+        # resists
         print("Resists:", self.resists)
         print("Rarity:", self.rarity)
         print("Item Type:", self.item_type)
@@ -160,9 +178,9 @@ class ForumSpider(scrapy.Spider):
                 item_info = filter_list(item_info, category_list)
                 print(item_info)
 
-                # removing the category strings and saving info into object properties
+                # removing the category strings and saving info into object attributes
                 for index, value in enumerate(item_info):
-                    # iterating multiple if statements through category_list[i]
+                    # iterating multiple if statements through category_list[n]
                     for n in range(len(category_list)): 
                         if value.startswith(category_list[n]):
                             # removing category strings
@@ -171,26 +189,32 @@ class ForumSpider(scrapy.Spider):
                             # special case for the first few attributes that are arrays
                             if n <= 3:
                                 weapons[obj_name].append_attr(category_attr[n], item_info[index])
+
                             # special case for damage (extracting min and max dmg)
                             elif n == 19:
                                 weapons[obj_name].damage_min = item_info[index].split("-")[0]
                                 weapons[obj_name].damage_max = item_info[index].split("-")[1]
+
                             # for the rest of the attributes that are variables
                             else:
                                 setattr(weapons[obj_name], category_attr[n], item_info[index])
-                            # # special case for bonuses
-                            # elif n == 7 or n == 8:
-                            #     bonuses = item_info[index].split(",")
-                            #     weapons[obj_name].bonuses = bonuses
-                            #     print(bonuses)
+                                # special case for bonuses
+                                if n == 6 or n == 7:
+                                    item_bonuses = item_info[index].split(",")
+                                    print(item_bonuses)
+                                    # mini version of the above loop but for stats instead of item_info
+                                    for index2, value2 in enumerate(item_bonuses):
+                                        for n2 in range(len(stats_list)):
+                                            if value2.startswith(stats_list[n2]):
+                                                item_bonuses[index2] = value2.replace(stats_list[n2], "")
 
-
-                            # # special case for resists
-                            # elif n == 9:
-                            #     resists = item_info[index].split(",")
-                            #     weapons[obj_name].resists = resists
-
-                            # # saving properly formatted value to object property
+                                                # converting string elements with + and - into integers
+                                                if "+" in item_bonuses[index2]:
+                                                    item_bonuses[index2] = int(item_bonuses[index2].split("+")[1])
+                                                elif "-" in item_bonuses[index2]:
+                                                    item_bonuses[index2] = -1*int(item_bonuses[index2].split("-")[1])
+                                                
+                                                setattr(weapons[obj_name], stats_attr[n2], item_bonuses[index2])
 
                 print("+++++++++++++++++++++++++++++++++++++")
                 print(url, obj_name)
