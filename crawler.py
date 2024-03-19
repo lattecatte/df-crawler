@@ -1,9 +1,10 @@
 import scrapy
 import csv
 import re
+import time
 
+t_start = time.time()
 weapons = dict()
-objects = []
 
 # sometimes the category "Bonuses:" is listed as "Stats:" on the forums
 category_list = [" Price:", " Sellback:", " Level:", " Element:",
@@ -26,12 +27,15 @@ def filter_list(main_list, sub_list):
     return [m for m in main_list if any(m.startswith(s) for s in sub_list)]
 
 class Weapon:
-    def __init__(self):        
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
         self.location_name = []
         self.location_link = []
+        self.price = [] # array because multiple sources of the weapon
         self.required_item_name = []
         self.required_item_link = []
-        self.price = [] # array because multiple sources of the weapon
         self.sellback = []
         # self.da = False
         # self.dc = False
@@ -43,6 +47,15 @@ class Weapon:
         self.name = name
         self.description = description
 
+objects = [Weapon(link="", name="", description="", location_name=[], location_link=[], price=[],
+                  required_item_name=[], required_item_link=[], required_item_quantity=[], sellback=[],
+                  item_type="", damage_type="", rarity=0, level=0, damage_min=0, damage_max=0, element="",
+                  special_name="", special_activation="", special_effect="", special_damage="", special_element="", special_damage_type="", special_rate="",
+                  bonuses="", str=0, int=0, dex=0, end=0, cha=0, luk=0, wis=0, crit=0, bonus=0, melee_def=0, pierce_def=0, magic_def=0, block=0, parry=0, dodge=0,
+                  resists="", all=0, fire=0, water=0, wind=0, ice=0, stone=0, nature=0, energy=0, light=0, darkness=0, bacon=0,
+                  metal=0, silver=0, poison=0, disease=0, good=0, evil=0, ebil=0, fear=0,
+                  doom=0, love=0, hunger=0, marketability=0, health=0, mana=0, immobility=0, shrink=0)]
+
 class ForumSpider(scrapy.Spider):
     name = 'forum-spider'
     start_urls = ['https://forums2.battleon.com/f/tm.asp?m=22094733']
@@ -51,8 +64,8 @@ class ForumSpider(scrapy.Spider):
     def parse(self, response):
         # get item path from DOM tree <td class="msg"> <a>
         test_index = 0
-        test_range = 4
-        az_item_path = response.xpath("//td[@class='msg']/a")[test_index:test_index+test_range]
+        test_range = 100
+        az_item_path = response.xpath("//td[@class='msg']/a")#[test_index:test_index+test_range]
 
         for item in az_item_path:
             # get item name from <td class="msg"> <a> text
@@ -82,6 +95,8 @@ class ForumSpider(scrapy.Spider):
                 weapons[item_id] = Weapon()
                 objects.append(weapons[item_id])
 
+                # set link
+                setattr(weapons[item_id], "link", item_url)
                 # set name
                 setattr(weapons[item_id], "name", item_name[0])
 
@@ -190,24 +205,23 @@ class ForumSpider(scrapy.Spider):
         
         # export object attr to csv
         print("******************")
-        print(weapons)
 
-        # # set base attributes and their order
-        # # print(objects[0].keys())
-        # base_attributes = ['name']
+        # since attribute column order will be random, get the base attributes in the correct order from first object
+        base_attributes = list(vars(objects[0]).keys())
 
-        # # extracting all attributes from the objects
-        # all_attributes = set()
-        # for obj in objects:
-        #     print(obj.__dict__.keys())
-        #     all_attributes.update(obj.__dict__.keys())
+        # extracting additional attributes dynamically  
+        additional_attributes = set()
+        for obj in objects:
+            additional_attributes.update(set(vars(obj).keys()) - set(base_attributes))
 
-        # # writing to csv
-        # with open('output.csv', 'w', newline='') as csvfile:
-        #     writer = csv.DictWriter(csvfile, fieldnames=base_attributes)
-        #     writer.writeheader()
+        # writing to csv
+        with open('all-weapons.csv', 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=base_attributes + list(additional_attributes))
+            writer.writeheader()
 
-        #     for d in objects:
-        #         writer.writerow(d)
+            for obj in objects:
+                writer.writerow(vars(obj))
 
+t_end = time.time()
+print(t_end - t_start)
                 
