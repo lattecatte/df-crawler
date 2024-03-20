@@ -64,17 +64,18 @@ class ForumSpider(scrapy.Spider):
     def parse(self, response):
         # get item path from DOM tree <td class="msg"> <a>
         test_index = 0
-        test_range = 100
-        az_item_path = response.xpath("//td[@class='msg']/a")#[test_index:test_index+test_range]
+        test_range = 5
+        item_path = response.xpath("//td[@class='msg']/a")[test_index:test_index+test_range]
 
-        for item in az_item_path:
-            # get item name from <td class="msg"> <a> text
-            az_item_name = item.xpath("text()").get().encode("utf-8")
+        for item in item_path:
+            # # get item name from <td class="msg"> <a> text
+            # item_name = item.xpath("text()").get().encode("utf-8")
+            
             # get item url from <td class="msg"> <a href="">
-            az_item_url = item.xpath("@href").get()
+            item_url = item.xpath("@href").get()
 
             # move on to parse_element
-            yield scrapy.Request(url = response.urljoin(az_item_url),
+            yield scrapy.Request(url = response.urljoin(item_url),
                                  callback = self.parse_element)
 
     # parsing individual item page
@@ -82,124 +83,125 @@ class ForumSpider(scrapy.Spider):
         # get message path from DOM tree <td class="msg">
         message_path = response.xpath("//td[@class='msg']")
             
-        for index, message in enumerate(message_path):
-            # get item name from <b> tag, sometimes the <b> tag and <font> are used interchangeably on the forums
-            item_name = message.xpath("font/b/text() | b/font/text()").getall()
-            item_name = [i.encode("utf-8") for i in item_name]
+        for index, msg_path in enumerate(message_path):
+            # get name from <b> tag, sometimes the <b> tag and <font> are used interchangeably on the forums
+            name_path = msg_path.xpath("font/b/text() | b/font/text()")
+            name = name_path.getall()
+            name = [x.encode("utf-8") for x in name]
             
-            if item_name:
+            if name:
                 # create object (object name is url + msg index in individual item page)
-                item_url = response.request.url
-                item_num = item_url.replace("https://forums2.battleon.com/f/tm.asp?m=", "")
-                item_id = str(item_num) + "_" + str(index)
-                weapons[item_id] = Weapon()
-                objects.append(weapons[item_id])
+                url = response.request.url
+                url = url.replace("https://forums2.battleon.com/f/tm.asp?m=", "")
+                id = str(url) + "_" + str(index)
 
-                # set link
-                setattr(weapons[item_id], "link", item_url)
-                # set name
-                setattr(weapons[item_id], "name", item_name[0])
+                weapons[id] = Weapon()
+                objects.append(weapons[id])
 
-                # get item description from <i> tag following <b>
-                item_description = message.xpath("font/following-sibling::i[1]/text() | b/following-sibling::i[1]/text()").getall()
-                item_description = [i.encode("utf-8") for i in item_description]
-                setattr(weapons[item_id], "description", item_description[0])
+                # set link and name
+                setattr(weapons[id], "link", url)
+                setattr(weapons[id], "name", name[0])
 
-                # get location names and links
-                message_string = message.getall()[0]
-                location_string = extract_content_between_words(message_string, "Location:", "Price:")
+                # get description from <i> tag following <b>
+                desc_path = msg_path.xpath("font/following-sibling::i[1]/text() | b/following-sibling::i[1]/text()")
+                desc = desc_path.getall()
+                desc = [x.encode("utf-8") for x in desc]
+                setattr(weapons[id], "description", desc[0])
+
+                # get location names and links (multiple)
+                message = msg_path.getall()[0]
+                location = extract_content_between_words(message, "Location:", "Price:")
                 
-                for location in location_string:
-                    location_string_trimmed = extract_content_between_words(location, 'href="', "</a>")
-                    # location name
-                    location_name = location_string_trimmed[0].split('">')[1]
-                    weapons[item_id].append_attr("location_name", location_name)
-                    # location link
-                    location_link = location_string_trimmed[0].split('">')[0]
-                    weapons[item_id].append_attr("location_link", location_link)
-                    
-                # get required item quantity, names and links
-                req_string = extract_content_between_words(message_string, "Required Items:", "Sellback:")
+                for loc in location:
+                    location_trimmed = extract_content_between_words(loc, 'href="', "</a>")
 
-                for index, req in enumerate(req_string):
-                    # req quantity
-                    clean_string = re.sub(r'<[^>]*>', '', req) # remove html tags
+                    location_name = location_trimmed[0].split('">')[1]
+                    weapons[id].append_attr("location_name", location_name)
+
+                    location_link = location_trimmed[0].split('">')[0]
+                    weapons[id].append_attr("location_link", location_link)
+                    
+                # get required item quantity, name and link
+                req = extract_content_between_words(message, "Required Items:", "Sellback:")
+
+                for index, rq in enumerate(req):
+                    clean_string = re.sub(r'<[^>]*>', '', rq) # remove html tags
                     integers = re.findall(r'\b\d+\b', clean_string)
-                    req_quantity = [int(num) for num in integers]
-                    setattr(weapons[item_id], "required_item_quantity", req_quantity)
+                    req_quantity = [int(x) for x in integers]
+                    setattr(weapons[id], "required_item_quantity", req_quantity)
 
-                    req_string_trimmed = extract_content_between_words(req, 'href="', "</a>")
+                    req_trimmed = extract_content_between_words(rq, 'href="', "</a>")
 
-                    for r in req_string_trimmed:
-                        # req name
+                    for r in req_trimmed:
                         req_name = r.split('">')[1]
-                        weapons[item_id].append_attr("required_item_name", req_name)
-                        # req link
+                        weapons[id].append_attr("required_item_name", req_name)
+
                         req_link = r.split('">')[0]
-                        weapons[item_id].append_attr("required_item_link", req_link)
+                        weapons[id].append_attr("required_item_link", req_link)
                     
-                # get item info from main message path <td class="msg"> text and filter relevant categories
-                item_info = message.xpath("text()").getall()
-                item_info = filter_list(item_info, category_list)
+                # get information from main message path <td class="msg"> text and filter relevant categories
+                info_path = msg_path.xpath("text()")
+                information = filter_list(info_path.getall(), category_list)
 
                 # removing the category strings and saving info into object attributes
-                for i, info in enumerate(item_info):
-                    # iterating multiple if statements through category_list[m]
-                    for m in range(len(category_list)): 
-                        if info.startswith(category_list[m]):
-                            # removing category strings
-                            item_info[i] = info.replace(category_list[m], "")
+                for index, info in enumerate(information):
+                    # iterating multiple if statements through category_list[n]
+                    for n in range(len(category_list)): 
+                        if info.startswith(category_list[n]):
+                            # removing category strings eg. "Price:" and only leaving value
+                            information[index] = info.replace(category_list[n], "")
 
                             # special case for the first few attributes that are arrays
-                            if m <= 1:
-                                weapons[item_id].append_attr(category_attr[m], item_info[i])
+                            if n <= 1:
+                                weapons[id].append_attr(category_attr[n], information[index])
 
                             # special case for damage (extracting min and max dmg)
-                            elif m == 17:
-                                weapons[item_id].damage_min = item_info[i].split("-")[0]
-                                weapons[item_id].damage_max = item_info[i].split("-")[1]
+                            elif n == 17:
+                                weapons[id].damage_min = information[index].split("-")[0]
+                                weapons[id].damage_max = information[index].split("-")[1]
 
                             # for the rest of the attributes that are variables
                             else:
-                                setattr(weapons[item_id], category_attr[m], item_info[i])
+                                setattr(weapons[id], category_attr[n], information[index])
                                 
                                 # special case for bonuses
-                                if m == 4 or m == 5:
-                                    item_bonuses = item_info[i].split(",")
-                                    bonuses_attr = []
+                                if n == 4 or n == 5:
+                                    bonuses = information[index].split(",")
+                                    bonuses_name = []
                     
-                                    for j, stat in enumerate(item_bonuses): # stat == item_bonuses[j]
-                                        if "+" in stat:
-                                            bonuses_attr.append(stat.split("+")[0].strip().lower().replace(" ", "_"))
-                                            stat = int(stat.split("+")[1])
-                                            setattr(weapons[item_id], bonuses_attr[j], stat)
-                                        elif "-" in stat:
-                                            bonuses_attr.append(stat.split("-")[0].strip().lower().replace(" ", "_"))
-                                            stat = -1 * int(stat.split("-")[1])
-                                            setattr(weapons[item_id], bonuses_attr[j], stat)
+                                    for j, bon in enumerate(bonuses):
+                                        if "+" in bon:
+                                            # auto generate bonuses/resists names
+                                            bonuses_name.append(bon.split("+")[0].strip().lower().replace(" ", "_"))
+                                            bonuses_value = int(bon.split("+")[1])
+                                            setattr(weapons[id], bonuses_name[j], bonuses_value)
+                                        elif "-" in bon:
+                                            bonuses_name.append(bon.split("-")[0].strip().lower().replace(" ", "_"))
+                                            bonuses_value = -1 * int(bon.split("-")[1])
+                                            setattr(weapons[id], bonuses_name[j], bonuses_value)
 
                                 # special case for resists
-                                if m == 6:
-                                    item_resists = item_info[i].split(",")
-                                    resists_attr = []
+                                if n == 6:
+                                    resists = information[index].split(",")
+                                    resists_name = []
                     
-                                    for k, elem in enumerate(item_resists): # elem == item_resists[k]
-                                        if "+" in elem:
-                                            resists_attr.append(elem.split("+")[0].strip().lower().replace(" ", "_"))
-                                            elem = int(elem.split("+")[1])
-                                            setattr(weapons[item_id], resists_attr[k], elem)
-                                        elif "-" in elem:
-                                            resists_attr.append(elem.split("-")[0].strip().lower().replace(" ", "_"))
-                                            elem = -1 * int(elem.split("-")[1])
-                                            setattr(weapons[item_id], resists_attr[k], elem)
+                                    for k, res in enumerate(resists):
+                                        if "+" in res:
+                                            resists_name.append(res.split("+")[0].strip().lower().replace(" ", "_"))
+                                            resists_value = int(res.split("+")[1])
+                                            setattr(weapons[id], resists_name[k], resists_value)
+                                        elif "-" in res:
+                                            resists_name.append(res.split("-")[0].strip().lower().replace(" ", "_"))
+                                            resists_value = -1 * int(res.split("-")[1])
+                                            setattr(weapons[id], resists_name[k], resists_value)
                           
                 print("+++++++++++++++++++++++++++++++++++++")
-                print(item_name)
-                print(item_url, item_id, "\n")
+                print(name)
+                print(url, id, "\n")
 
                 # print all object attributes in a new line
-                for l in vars(weapons[item_id]):
-                    print(l, ":", vars(weapons[item_id])[l])
+                for l in vars(weapons[id]):
+                    print(l, ":", vars(weapons[id])[l])
 
                 print("+++++++++++++++++++++++++++++++++++++")
         
