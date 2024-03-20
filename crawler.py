@@ -70,13 +70,12 @@ class ForumSpider(scrapy.Spider):
         for item in item_path:
             # # get item name from <td class="msg"> <a> text
             # item_name = item.xpath("text()").get().encode("utf-8")
-            
+
             # get item url from <td class="msg"> <a href="">
             item_url = item.xpath("@href").get()
 
             # move on to parse_element
-            yield scrapy.Request(url = response.urljoin(item_url),
-                                 callback = self.parse_element)
+            yield scrapy.Request(url = response.urljoin(item_url), callback = self.parse_element)
 
     # parsing individual item page
     def parse_element(self, response):
@@ -157,8 +156,8 @@ class ForumSpider(scrapy.Spider):
 
                             # special case for damage (extracting min and max dmg)
                             elif n == 17:
-                                weapons[id].damage_min = information[index].split("-")[0]
-                                weapons[id].damage_max = information[index].split("-")[1]
+                                setattr(weapons[id], "damage_min", information[index].split("-")[0])
+                                setattr(weapons[id], "damage_max", information[index].split("-")[1])
 
                             # for the rest of the attributes that are variables
                             else:
