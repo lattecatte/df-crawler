@@ -37,8 +37,7 @@ class Weapon:
         self.required_item_name = []
         self.required_item_link = []
         self.sellback = []
-        # self.da = False
-        # self.dc = False
+        self.dc = []
 
     def append_attr(self, attr, value):
         self.__dict__[attr].append(value)
@@ -47,7 +46,7 @@ class Weapon:
         self.name = name
         self.description = description
 
-objects = [Weapon(link="", name="", description="", da="", location_name=[], location_link=[], price=[],
+objects = [Weapon(link="", name="", description="", da="", dc="", dm="", rare="", location_name=[], location_link=[], price=[],
                   required_item_name=[], required_item_link=[], required_item_quantity=[], sellback=[],
                   item_type="", damage_type="", rarity=0, level=0, damage_min=0, damage_max=0, element="",
                   special_name="", special_activation="", special_effect="", special_damage="", special_element="", special_damage_type="", special_rate="",
@@ -64,7 +63,7 @@ class ForumSpider(scrapy.Spider):
     def parse(self, response):
         # get item path from DOM tree <td class="msg"> <a>
         test_index = 0
-        test_range = 5
+        test_range = 20
         item_path = response.xpath("//td[@class='msg']/a")[test_index:test_index+test_range]
 
         for item in item_path:
@@ -102,18 +101,50 @@ class ForumSpider(scrapy.Spider):
                 setattr(weapons[id], "name", name[0])
 
                 # get description from <i> tag following <b>
-                desc_path = msg_path.xpath("font/following-sibling::i[1]/text() | b/following-sibling::i[1]/text()")
+                desc_path = msg_path.xpath("font/following-sibling::i/text() | b/following-sibling::i/text()")
                 desc = desc_path.getall()
                 desc = [x.encode("utf-8") for x in desc]
+                print(desc)
                 setattr(weapons[id], "description", desc[0])
 
-                # get dragon amulet required status from " (No DA Required) " text after description
-                da_req_path = msg_path.xpath("font/following-sibling::i[1]/following-sibling::text()[2] | b/following-sibling::i[1]/following-sibling::text()[2]")
-                da_req = da_req_path.getall()[0]
-                if da_req == " (No DA Required) ":
-                    setattr(weapons[id], "da", False)
+                # get da tag status from " (No DA Required) " text after description
+                # if desc_path:
+                #     da_req_path = msg_path.xpath("font/following-sibling::i[1]/following-sibling::text()[2] | b/following-sibling::i[1]/following-sibling::text()[2]")
+                #     da_req = da_req_path.getall()[0]
+                #     print("---->", da_req_path)
+
+                # else:
+                #     da_req_path = msg_path.xpath("font/following-sibling::text()[2] | b/following-sibling::text()[2]")
+                #     print("+++++++++>", da_req_path)
+                # if da_req == " (No DA Required) ":
+                #     setattr(weapons[id], "da", False)
+                # else:
+                #     setattr(weapons[id], "da", True)
+
+                # get dm, rare, seasonal, special offer tags from images in <img>
+                img_path = msg_path.xpath("img/@src | li/img/@src")
+                img = img_path.getall()
+                if "https://media.artix.com/encyc/df/tags/DM.jpg" in [x for x in img]:
+                    setattr(weapons[id], "dm", True)
                 else:
-                    setattr(weapons[id], "da", True)
+                    setattr(weapons[id], "dm", False)
+
+                if "https://media.artix.com/encyc/df/tags/Rare.jpg" in [x for x in img]:
+                    setattr(weapons[id], "rare", True)
+                else:
+                    setattr(weapons[id], "rare", False)
+
+                if "https://media.artix.com/encyc/df/tags/Seasonal.jpg" in [x for x in img]:
+                    setattr(weapons[id], "seasonal", True)
+                else:
+                    setattr(weapons[id], "seasonal", False)
+                
+                if "https://media.artix.com/encyc/df/tags/SpecialOffer.jpg" in [x for x in img]:
+                    setattr(weapons[id], "special_offer", True)
+                else:
+                    setattr(weapons[id], "special_offer", False)
+
+
 
                 # get location names and links (multiple)
                 message = msg_path.getall()[0]
@@ -161,6 +192,13 @@ class ForumSpider(scrapy.Spider):
                             # special case for the first few attributes that are arrays
                             if n <= 1:
                                 weapons[id].append_attr(category_attr[n], information[index])
+                                
+                                # get dc tag status from "Dragon Coins" text in sellback
+                                for index, slb in enumerate(weapons[id].sellback):
+                                    if "Dragon Coins" in slb:
+                                        weapons[id].append_attr("dc", True)
+                                    else:
+                                        weapons[id].append_attr("dc", False)
 
                             # special case for damage (extracting min and max dmg)
                             elif n == 17:
@@ -201,7 +239,8 @@ class ForumSpider(scrapy.Spider):
                                             resists_name.append(res.split("-")[0].strip().lower().replace(" ", "_"))
                                             resists_value = -1 * int(res.split("-")[1])
                                             setattr(weapons[id], resists_name[k], resists_value)
-                          
+                
+                                         
                 print("+++++++++++++++++++++++++++++++++++++")
                 print(name)
                 print(url, id, "\n")
