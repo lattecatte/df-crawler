@@ -47,7 +47,7 @@ class Weapon:
         self.name = name
         self.description = description
 
-objects = [Weapon(link="", name="", description="", location_name=[], location_link=[], price=[],
+objects = [Weapon(link="", name="", description="", da="", location_name=[], location_link=[], price=[],
                   required_item_name=[], required_item_link=[], required_item_quantity=[], sellback=[],
                   item_type="", damage_type="", rarity=0, level=0, damage_min=0, damage_max=0, element="",
                   special_name="", special_activation="", special_effect="", special_damage="", special_element="", special_damage_type="", special_rate="",
@@ -91,8 +91,8 @@ class ForumSpider(scrapy.Spider):
             if name:
                 # create object (object name is url + msg index in individual item page)
                 url = response.request.url
-                url = url.replace("https://forums2.battleon.com/f/tm.asp?m=", "")
-                id = str(url) + "_" + str(index)
+                url_num = url.replace("https://forums2.battleon.com/f/tm.asp?m=", "")
+                id = str(url_num) + "_" + str(index)
 
                 weapons[id] = Weapon()
                 objects.append(weapons[id])
@@ -106,6 +106,14 @@ class ForumSpider(scrapy.Spider):
                 desc = desc_path.getall()
                 desc = [x.encode("utf-8") for x in desc]
                 setattr(weapons[id], "description", desc[0])
+
+                # get dragon amulet required status from " (No DA Required) " text after description
+                da_req_path = msg_path.xpath("font/following-sibling::i[1]/following-sibling::text()[2] | b/following-sibling::i[1]/following-sibling::text()[2]")
+                da_req = da_req_path.getall()[0]
+                if da_req == " (No DA Required) ":
+                    setattr(weapons[id], "da", False)
+                else:
+                    setattr(weapons[id], "da", True)
 
                 # get location names and links (multiple)
                 message = msg_path.getall()[0]
