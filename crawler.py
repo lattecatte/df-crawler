@@ -1,6 +1,9 @@
 import scrapy
+from scrapy.crawler import CrawlerProcess
 import csv
 import re
+import tkinter as tk
+from tkinter import ttk
 
 weapons = dict()
 
@@ -227,7 +230,8 @@ class ForumSpider(scrapy.Spider):
                     else:
                         weapons[id].append_attr("dc", False)
 
-                print("+++++++++++++++++++++++++++++++++++++")
+                # debug
+
                 print(name)
                 print(url, id, "\n")
 
@@ -238,13 +242,13 @@ class ForumSpider(scrapy.Spider):
                 print("+++++++++++++++++++++++++++++++++++++")
         
         # export object attr to csv
-        print("******************")
 
         # since attribute column order will be random, get the base attributes in the correct order from first object
         base_attributes = list(vars(objects[0]).keys())
 
         # extracting additional attributes dynamically  
         additional_attributes = set()
+        
         for obj in objects:
             additional_attributes.update(set(vars(obj).keys()) - set(base_attributes))
 
@@ -255,3 +259,81 @@ class ForumSpider(scrapy.Spider):
 
             for obj in objects:
                 writer.writerow(vars(obj))
+
+if __name__ == "__main__":
+    process = CrawlerProcess(settings={
+        # Specify any settings if needed
+        'LOG_ENABLED': False  # Disable logging if not needed
+    })
+
+    process.crawl(ForumSpider)
+    process.start()
+
+def update_listbox():
+    object_listbox.delete(0, tk.END)
+    for obj in sorted(objects, key=lambda x: getattr(x, sort_by.get())):
+        object_listbox.insert(tk.END, obj.name)
+
+def show_attributes(event):
+    selected_index = object_listbox.curselection()[0]
+    selected_object = objects[selected_index]
+    name_label.config(text=f"Name: {selected_object.name}")
+    price_label.config(text=f"Price: {selected_object.price}")
+    bonuses_label.config(text=f"Bonuses: {selected_object.bonuses}")
+
+def search():
+    search_text = search_entry.get().lower()
+    object_listbox.delete(0, tk.END)
+    for obj in objects:
+        if search_text in obj.name.lower():
+            object_listbox.insert(tk.END, obj.name)
+
+def on_sort_changed(*args):
+    update_listbox()
+
+# Initialize tkinter window
+root = tk.Tk()
+root.title("Object Viewer")
+
+# Create UI elements
+search_label = tk.Label(root, text="Search by Object Name:")
+search_label.grid(row=0, column=0, sticky="w")
+
+search_entry = tk.Entry(root)
+search_entry.grid(row=0, column=1, sticky="we")
+
+search_button = tk.Button(root, text="Search", command=search)
+search_button.grid(row=0, column=2, sticky="w")
+
+sort_by = tk.StringVar(root)
+sort_by.set("name")  # default sorting attribute
+sort_by.trace_add("write", on_sort_changed)
+
+sort_label = tk.Label(root, text="Sort by:")
+sort_label.grid(row=1, column=0, sticky="w")
+
+sort_by_name_button = tk.Radiobutton(root, text="Name", variable=sort_by, value="name")
+sort_by_name_button.grid(row=1, column=1, sticky="w")
+
+sort_by_price_button = tk.Radiobutton(root, text="Price", variable=sort_by, value="price")
+sort_by_price_button.grid(row=1, column=2, sticky="w")
+
+sort_by_bonuses_button = tk.Radiobutton(root, text="Bonuses", variable=sort_by, value="bonuses")
+sort_by_bonuses_button.grid(row=1, column=3, sticky="w")
+
+object_listbox = tk.Listbox(root)
+object_listbox.grid(row=2, column=0, columnspan=4, sticky="nsew")
+object_listbox.bind("<<ListboxSelect>>", show_attributes)
+
+name_label = tk.Label(root, text="")
+name_label.grid(row=3, column=4, sticky="w")
+
+price_label = tk.Label(root, text="")
+price_label.grid(row=4, column=4, sticky="w")
+
+bonuses_label = tk.Label(root, text="")
+bonuses_label.grid(row=5, column=4, sticky="w")
+
+update_listbox()
+
+root.mainloop()
