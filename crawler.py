@@ -1,9 +1,7 @@
 import scrapy
 import csv
 import re
-import time
 
-t_start = time.time()
 weapons = dict()
 
 # sometimes the category "Bonuses:" is listed as "Stats:" on the forums
@@ -46,8 +44,8 @@ class Weapon:
         self.name = name
         self.description = description
 
-objects = [Weapon(link="", name="", description="", da="", dc="", dm="", rare="", location_name=[], location_link=[], price=[],
-                  required_item_name=[], required_item_link=[], required_item_quantity=[], sellback=[],
+objects = [Weapon(link="", name="", description="", da=False, dc=[], dm=False, rare=False, seasonal=False, special_offer=False,
+                  location_name=[], location_link=[], price=[], required_item_name=[], required_item_link=[], required_item_quantity=[], sellback=[],
                   item_type="", damage_type="", rarity=0, level=0, damage_min=0, damage_max=0, element="",
                   special_name="", special_activation="", special_effect="", special_damage="", special_element="", special_damage_type="", special_rate="",
                   bonuses="", str=0, int=0, dex=0, end=0, cha=0, luk=0, wis=0, crit=0, bonus=0, melee_def=0, pierce_def=0, magic_def=0, block=0, parry=0, dodge=0,
@@ -104,22 +102,7 @@ class ForumSpider(scrapy.Spider):
                 desc_path = msg_path.xpath("font/following-sibling::i/text() | b/following-sibling::i/text()")
                 desc = desc_path.getall()
                 desc = [x.encode("utf-8") for x in desc]
-                print(desc)
                 setattr(weapons[id], "description", desc[0])
-
-                # get da tag status from " (No DA Required) " text after description
-                # if desc_path:
-                #     da_req_path = msg_path.xpath("font/following-sibling::i[1]/following-sibling::text()[2] | b/following-sibling::i[1]/following-sibling::text()[2]")
-                #     da_req = da_req_path.getall()[0]
-                #     print("---->", da_req_path)
-
-                # else:
-                #     da_req_path = msg_path.xpath("font/following-sibling::text()[2] | b/following-sibling::text()[2]")
-                #     print("+++++++++>", da_req_path)
-                # if da_req == " (No DA Required) ":
-                #     setattr(weapons[id], "da", False)
-                # else:
-                #     setattr(weapons[id], "da", True)
 
                 # get dm, rare, seasonal, special offer tags from images in <img>
                 img_path = msg_path.xpath("img/@src | li/img/@src")
@@ -144,10 +127,14 @@ class ForumSpider(scrapy.Spider):
                 else:
                     setattr(weapons[id], "special_offer", False)
 
-
+                # get da tag status from " (No DA Required) "
+                message = msg_path.getall()[0]
+                if "(No DA Required)" in message:
+                    setattr(weapons[id], "da", False)
+                else:
+                    setattr(weapons[id], "da", True)
 
                 # get location names and links (multiple)
-                message = msg_path.getall()[0]
                 location = extract_content_between_words(message, "Location:", "Price:")
                 
                 for loc in location:
@@ -189,17 +176,10 @@ class ForumSpider(scrapy.Spider):
                             # removing category strings eg. "Price:" and only leaving value
                             information[index] = info.replace(category_list[n], "")
 
-                            # special case for the first few attributes that are arrays
+                            # special case for arrays price and sellback
                             if n <= 1:
                                 weapons[id].append_attr(category_attr[n], information[index])
                                 
-                                # get dc tag status from "Dragon Coins" text in sellback
-                                for index, slb in enumerate(weapons[id].sellback):
-                                    if "Dragon Coins" in slb:
-                                        weapons[id].append_attr("dc", True)
-                                    else:
-                                        weapons[id].append_attr("dc", False)
-
                             # special case for damage (extracting min and max dmg)
                             elif n == 17:
                                 setattr(weapons[id], "damage_min", information[index].split("-")[0])
@@ -240,7 +220,13 @@ class ForumSpider(scrapy.Spider):
                                             resists_value = -1 * int(res.split("-")[1])
                                             setattr(weapons[id], resists_name[k], resists_value)
                 
-                                         
+                # get dc tag from sellback     
+                for index, slb in enumerate(weapons[id].sellback):
+                    if "Dragon Coins" in slb:
+                        weapons[id].append_attr("dc", True)
+                    else:
+                        weapons[id].append_attr("dc", False)
+
                 print("+++++++++++++++++++++++++++++++++++++")
                 print(name)
                 print(url, id, "\n")
@@ -263,13 +249,9 @@ class ForumSpider(scrapy.Spider):
             additional_attributes.update(set(vars(obj).keys()) - set(base_attributes))
 
         # writing to csv
-        with open('all-weapons.csv', 'w', newline='') as csvfile:
+        with open('test2.csv', 'w', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=base_attributes + list(additional_attributes))
             writer.writeheader()
 
             for obj in objects:
                 writer.writerow(vars(obj))
-
-t_end = time.time()
-print(t_end - t_start)
-                
