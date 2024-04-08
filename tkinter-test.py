@@ -7,6 +7,15 @@ class Object:
         self.price = price
         self.bonuses = bonuses
 
+class SortButton(tk.Radiobutton):
+    def __init__(self, master=None, **kwargs):
+        kwargs["indicatoron"] = 0
+        # kwargs["bg"] = "White"
+        kwargs["selectcolor"] = "#BA3D65"
+        kwargs["width"] = 10
+        kwargs["height"] = 1
+        super().__init__(master, **kwargs)
+
 # Sample data
 objects = [
     Object("Object1", 20, 5),
@@ -40,16 +49,16 @@ def on_sort_changed(*args):
 
 # Initialize tkinter window
 root = tk.Tk()
+root.tk_setPalette(foreground="White", background="#202020")
 root.title("Object Viewer")
 
 # Create UI elements
 search_label = tk.Label(root, text="Search by Object Name:")
+search_entry = tk.Entry(root, bg="#404040")
+search_button = tk.Button(root, text="Search", command=search, bg="#BA3D65", activebackground="#BA164B", width=10, height=1)
+
 search_label.pack()
-
-search_entry = tk.Entry(root)
 search_entry.pack()
-
-search_button = tk.Button(root, text="Search", command=search)
 search_button.pack()
 
 sort_by = tk.StringVar(root)
@@ -59,28 +68,28 @@ sort_by.trace_add("write", on_sort_changed)
 sort_label = tk.Label(root, text="Sort by:")
 sort_label.pack()
 
-sort_by_name_button = tk.Radiobutton(root, text="Name", variable=sort_by, value="name")
+sort_by_name_button = SortButton(root, text="Name", variable=sort_by, value="name")
+sort_by_price_button = SortButton(root, text="Price", variable=sort_by, value="price")
+sort_by_bonuses_button = SortButton(root, text="Bonuses", variable=sort_by, value="bonuses")
+
 sort_by_name_button.pack()
-
-sort_by_price_button = tk.Radiobutton(root, text="Price", variable=sort_by, value="price")
 sort_by_price_button.pack()
-
-sort_by_bonuses_button = tk.Radiobutton(root, text="Bonuses", variable=sort_by, value="bonuses")
 sort_by_bonuses_button.pack()
 
-object_listbox = tk.Listbox(root)
+object_listbox = tk.Listbox(root, bg="#404040", selectbackground="#BA3D65")
 object_listbox.pack()
 object_listbox.bind("<<ListboxSelect>>", show_attributes)
 
 name_label = tk.Label(root, text="")
-name_label.pack()
-
 price_label = tk.Label(root, text="")
-price_label.pack()
-
 bonuses_label = tk.Label(root, text="")
+
+name_label.pack()
+price_label.pack()
 bonuses_label.pack()
 
 update_listbox()
 
 root.mainloop()
+
+

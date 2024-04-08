@@ -2,8 +2,7 @@ import scrapy
 from scrapy.crawler import CrawlerProcess
 import csv
 import re
-import tkinter as tk
-from tkinter import ttk
+from datetime import datetime 
 
 weapons = dict()
 
@@ -54,7 +53,7 @@ objects = [Weapon(link="", name="", description="", da=False, dc=[], dm=False, r
                   bonuses="", str=0, int=0, dex=0, end=0, cha=0, luk=0, wis=0, crit=0, bonus=0, melee_def=0, pierce_def=0, magic_def=0, block=0, parry=0, dodge=0,
                   resists="", all=0, fire=0, water=0, wind=0, ice=0, stone=0, nature=0, energy=0, light=0, darkness=0, bacon=0,
                   metal=0, silver=0, poison=0, disease=0, good=0, evil=0, ebil=0, fear=0,
-                  doom=0, love=0, hunger=0, marketability=0, health=0, mana=0, immobility=0, shrink=0)]
+                  health=0, mana=0, immobility=0, shrink=0)]
 
 class ForumSpider(scrapy.Spider):
     name = 'forum-spider'
@@ -63,9 +62,9 @@ class ForumSpider(scrapy.Spider):
     # parsing A-Z page
     def parse(self, response):
         # get item path from DOM tree <td class="msg"> <a>
-        test_index = 0
-        test_range = 20
-        item_path = response.xpath("//td[@class='msg']/a")[test_index:test_index+test_range]
+        # test_index = 0
+        # test_range = 20
+        item_path = response.xpath("//td[@class='msg']/a")#[test_index:test_index+test_range]
 
         for item in item_path:
             # # get item name from <td class="msg"> <a> text
@@ -253,7 +252,8 @@ class ForumSpider(scrapy.Spider):
             additional_attributes.update(set(vars(obj).keys()) - set(base_attributes))
 
         # writing to csv
-        with open('test2.csv', 'w', newline='') as csvfile:
+        filename = "weapons-" + datetime.today().strftime('%Y-%m-%d') + ".csv"
+        with open(filename, "w", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=base_attributes + list(additional_attributes))
             writer.writeheader()
 
@@ -263,77 +263,8 @@ class ForumSpider(scrapy.Spider):
 if __name__ == "__main__":
     process = CrawlerProcess(settings={
         # Specify any settings if needed
-        'LOG_ENABLED': False  # Disable logging if not needed
+        "LOG_ENABLED": False  # Disable logging if not needed
     })
 
     process.crawl(ForumSpider)
     process.start()
-
-def update_listbox():
-    object_listbox.delete(0, tk.END)
-    for obj in sorted(objects, key=lambda x: getattr(x, sort_by.get())):
-        object_listbox.insert(tk.END, obj.name)
-
-def show_attributes(event):
-    selected_index = object_listbox.curselection()[0]
-    selected_object = objects[selected_index]
-    name_label.config(text=f"Name: {selected_object.name}")
-    price_label.config(text=f"Price: {selected_object.price}")
-    bonuses_label.config(text=f"Bonuses: {selected_object.bonuses}")
-
-def search():
-    search_text = search_entry.get().lower()
-    object_listbox.delete(0, tk.END)
-    for obj in objects:
-        if search_text in obj.name.lower():
-            object_listbox.insert(tk.END, obj.name)
-
-def on_sort_changed(*args):
-    update_listbox()
-
-# Initialize tkinter window
-root = tk.Tk()
-root.title("Object Viewer")
-
-# Create UI elements
-search_label = tk.Label(root, text="Search by Object Name:")
-search_label.grid(row=0, column=0, sticky="w")
-
-search_entry = tk.Entry(root)
-search_entry.grid(row=0, column=1, sticky="we")
-
-search_button = tk.Button(root, text="Search", command=search)
-search_button.grid(row=0, column=2, sticky="w")
-
-sort_by = tk.StringVar(root)
-sort_by.set("name")  # default sorting attribute
-sort_by.trace_add("write", on_sort_changed)
-
-sort_label = tk.Label(root, text="Sort by:")
-sort_label.grid(row=1, column=0, sticky="w")
-
-sort_by_name_button = tk.Radiobutton(root, text="Name", variable=sort_by, value="name")
-sort_by_name_button.grid(row=1, column=1, sticky="w")
-
-sort_by_price_button = tk.Radiobutton(root, text="Price", variable=sort_by, value="price")
-sort_by_price_button.grid(row=1, column=2, sticky="w")
-
-sort_by_bonuses_button = tk.Radiobutton(root, text="Bonuses", variable=sort_by, value="bonuses")
-sort_by_bonuses_button.grid(row=1, column=3, sticky="w")
-
-object_listbox = tk.Listbox(root)
-object_listbox.grid(row=2, column=0, columnspan=4, sticky="nsew")
-object_listbox.bind("<<ListboxSelect>>", show_attributes)
-
-name_label = tk.Label(root, text="")
-name_label.grid(row=3, column=4, sticky="w")
-
-price_label = tk.Label(root, text="")
-price_label.grid(row=4, column=4, sticky="w")
-
-bonuses_label = tk.Label(root, text="")
-bonuses_label.grid(row=5, column=4, sticky="w")
-
-update_listbox()
-
-root.mainloop()
