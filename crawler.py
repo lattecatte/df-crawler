@@ -1,8 +1,9 @@
+import re
+from datetime import datetime 
 import scrapy
 from scrapy.crawler import CrawlerProcess
 import csv
-import re
-from datetime import datetime 
+import sqlite3
 
 weapons = dict()
 
@@ -62,9 +63,9 @@ class ForumSpider(scrapy.Spider):
     # parsing A-Z page
     def parse(self, response):
         # get item path from DOM tree <td class="msg"> <a>
-        # test_index = 0
-        # test_range = 20
-        item_path = response.xpath("//td[@class='msg']/a")#[test_index:test_index+test_range]
+        test_index = 0
+        test_range = 20
+        item_path = response.xpath("//td[@class='msg']/a")[test_index:test_index+test_range]
 
         for item in item_path:
             # # get item name from <td class="msg"> <a> text
@@ -252,8 +253,8 @@ class ForumSpider(scrapy.Spider):
             additional_attributes.update(set(vars(obj).keys()) - set(base_attributes))
 
         # writing to csv
-        filename = "weapons-" + datetime.today().strftime('%Y-%m-%d') + ".csv"
-        with open(filename, "w", newline="") as csvfile:
+        filename = "weapons-" + datetime.today().strftime('%Y-%m-%d')
+        with open(filename + ".csv", "w", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=base_attributes + list(additional_attributes))
             writer.writeheader()
 
@@ -268,3 +269,85 @@ if __name__ == "__main__":
 
     process.crawl(ForumSpider)
     process.start()
+
+conn = sqlite3.connect("weps.db")
+cursor = conn.cursor()
+
+cursor.execute('''CREATE TABLE weapons (
+               link VARCHAR,
+               name VARCHAR,
+               description VARCHAR)''')
+            #    da BOOL,
+            #    -- dc,
+            #    dm BOOL,
+            #    rare BOOL,
+            #    seasonal BOOL,
+            #    special_offer BOOL,
+            #    -- location_name,
+            #    -- location_link,
+            #    -- price,
+            #    -- required_item_name,
+            #    -- required_item_link,
+            #    -- required_item_quantity,
+            #    -- sellback,
+            #    item_type VARCHAR,
+            #    damage_type VARCHAR,
+            #    rarity INTEGER,
+            #    level INTEGER,
+            #    damage_min INTEGER,
+            #    damage_max INTEGER,
+            #    element VARCHAR,
+            #    special_name VARCHAR,
+            #    special_activation VARCHAR,
+            #    special_effect VARCHAR,
+            #    special_damage VARCHAR,
+            #    special_element VARCHAR,
+            #    special_damage_type VARCHAR,
+            #    special_rate VARCHAR,
+            #    bonuses VARCHAR,
+            #    str INTEGER,
+            #    int INTEGER,
+            #    dex INTEGER,
+            #    end INTEGER,
+            #    cha INTEGER,
+            #    luk INTEGER,
+            #    wis INTEGER,
+            #    crit INTEGER,
+            #    bonus INTEGER,
+            #    melee_def INTEGER,
+            #    pierce_def INTEGER,
+            #    magic_def INTEGER,
+            #    block INTEGER,
+            #    parry INTEGER,
+            #    dodge INTEGER,
+            #    resists VARCHAR,
+            #    all INTEGER,
+            #    fire INTEGER,
+            #    water INTEGER,
+            #    wind INTEGER,
+            #    ice INTEGER,
+            #    stone INTEGER,
+            #    nature INTEGER,
+            #    energy INTEGER,
+            #    light INTEGER,
+            #    darkness INTEGER,
+            #    bacon INTEGER,
+            #    metal INTEGER,
+            #    silver INTEGER,
+            #    posion INTEGER,
+            #    disease INTEGER,
+            #    good INTEGER,
+            #    evil INTEGER,
+            #    ebil INTEGER,
+            #    fear INTEGER,
+            #    health INTEGER,
+            #    mana INTEGER,
+            #    immobility INTEGER,
+            #    shrink INTEGER
+
+for obj in objects:
+    cursor.execute('''INSERT INTO objects (link, name, description)
+                    VALUES (?, ?, ?)''', (obj.link, obj.name, obj.description))
+
+conn.commit()
+conn.close()
