@@ -19,17 +19,15 @@ conn = sqlite3.connect('database.db')
 cursor = conn.cursor()
 
 # Create a table to store your objects' data
-cursor.execute('''CREATE TABLE IF NOT EXISTS objects (
+cursor.execute('''CREATE TABLE objects (
                 name VARCHAR,
                 price INTEGER,
-                bonuses INTEGER,
-                ...
-                )''')
+                bonuses INTEGER)''')
 
 # Insert data into the table
 for obj in objects:
-    cursor.execute('''INSERT INTO objects (attribute1, attribute2, ...)
-                    VALUES (?, ?, ...)''', (obj.name, obj.price, obj.bonuses,...))
+    cursor.execute('''INSERT INTO objects (name, price, bonuses)
+                    VALUES (?, ?, ?)''', (obj.name, obj.price, obj.bonuses))
 
 # Commit changes and close connection
 conn.commit()
