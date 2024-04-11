@@ -1,5 +1,8 @@
 import re
 from datetime import datetime 
+import inspect
+import json
+
 import scrapy
 from scrapy.crawler import CrawlerProcess
 import csv
@@ -26,6 +29,28 @@ def extract_content_between_words(page, start_word, end_word):
 # filter main_list to only contain elements that are available in sub_list
 def filter_list(main_list, sub_list):
     return [m for m in main_list if any(m.startswith(s) for s in sub_list)]
+
+# check attribute data type in python and return acorresponding data type for sqlite
+def get_sqlite_type(attribute):
+    if isinstance(attribute, str):
+        return "VARCHAR"
+    elif isinstance(attribute, int):
+        return "INTEGER"
+    elif isinstance(attribute, bool):
+        return "BOOLEAN"
+    elif isinstance(attribute, list):
+        return "TEXT" # to JSON
+    else:
+        return "TEXT"
+
+def save_to_database(obj):
+    conn = sqlite3.connect("weapons.db")
+    cursor = conn.cursor()
+
+    # create table
+    attr_val_tuple_list = inspect.getmembers(obj.__class__, lambda a: not(inspect.isroutine(a)))
+    attr_type_str = ", ".join(f"{name} {get_sqlite_type(value)}" for name, value in attr_val_tuple_list if not name.startswith("__"))
+    cursor.execute(f"CREATE TABLE IF NOT EXISTS weapons ({attr_type_str})")
 
 class Weapon:
     def __init__(self, **kwargs):
@@ -225,13 +250,12 @@ class ForumSpider(scrapy.Spider):
                 
                 # get dc tag from sellback     
                 for index, slb in enumerate(weapons[id].sellback):
-                    if "Dragon Coins" in slb:
+                    if "Dragon Coins" or "N/A" in slb:
                         weapons[id].append_attr("dc", True)
                     else:
                         weapons[id].append_attr("dc", False)
 
                 # debug
-
                 print(name)
                 print(url, id, "\n")
 
@@ -241,35 +265,36 @@ class ForumSpider(scrapy.Spider):
 
                 print("+++++++++++++++++++++++++++++++++++++")
         
-        # export object attr to csv
+        # # ----- export object attr to csv ----- #
 
-        # since attribute column order will be random, get the base attributes in the correct order from first object
-        base_attributes = list(vars(objects[0]).keys())
+        # # since attribute column order will be random, get the base attributes in the correct order from first object
+        # base_attributes = list(vars(objects[0]).keys())
 
-        # extracting additional attributes dynamically  
-        additional_attributes = set()
+        # # extracting additional attributes dynamically  
+        # additional_attributes = set()
         
-        for obj in objects:
-            additional_attributes.update(set(vars(obj).keys()) - set(base_attributes))
+        # for obj in objects:
+        #     additional_attributes.update(set(vars(obj).keys()) - set(base_attributes))
 
-        # writing to csv
-        filename = "weapons-" + datetime.today().strftime('%Y-%m-%d')
-        with open(filename + ".csv", "w", newline="") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=base_attributes + list(additional_attributes))
-            writer.writeheader()
+        # # writing to csv
+        # filename = "weapons-" + datetime.today().strftime('%Y-%m-%d')
+        # with open(filename + ".csv", "w", newline="") as csvfile:
+        #     writer = csv.DictWriter(csvfile, fieldnames=base_attributes + list(additional_attributes))
+        #     writer.writeheader()
 
-            for obj in objects:
-                writer.writerow(vars(obj))
+        #     for obj in objects:
+        #         writer.writerow(vars(obj))
 
 if __name__ == "__main__":
     process = CrawlerProcess(settings={
-        # Specify any settings if needed
+        # specify any settings if needed
         "LOG_ENABLED": False  # Disable logging if not needed
     })
 
     process.crawl(ForumSpider)
     process.start()
 
+# save object attributes to database using sqlite3
 conn = sqlite3.connect("weps2.db")
 cursor = conn.cursor()
 
@@ -326,7 +351,7 @@ cursor.execute('''CREATE TABLE weapons (
                bacon INTEGER,
                metal INTEGER,
                silver INTEGER,
-               posion INTEGER,
+               poison INTEGER,
                disease INTEGER,
                good INTEGER,
                evil INTEGER,
@@ -348,8 +373,24 @@ cursor.execute('''CREATE TABLE weapons (
 
 
 for obj in objects:
-    cursor.execute('''INSERT INTO weapons (link, name, description)
-                    VALUES (?, ?, ?)''', (obj.link, obj.name, obj.description))
+    cursor.execute('''INSERT INTO weapons (link, name, description
+                                          da, dm, rare, seasonal, special_offer,
+                                          item_type, damage_type, rarity, level,
+                                          damage_min, damage_max, element,
+                                          special_name, special_activation, special_effect, special_damage, special_element, special_damage_type, special_rate,
+                                          bonuses, str, int, dex, end, cha, luk, wis, crit, bonus,
+                                          melee_def, pierce_def, magic_def, block, parry, dodge,
+                                          resists, all, fire, water, wind, ice, stone, nature, energy, light, darkness, bacon,
+                                          metal, silver, poison, disease, good, evil, ebil, fear, health, mana, immobility, shrink)
+                    VALUES (?, ?, ?)''', (obj.link, obj.name, obj.description,
+                                          obj.da, obj.dm, obj.rare, obj.seasonal, obj.special_offer,
+                                          obj.item_type, obj.damage_type, obj.rarity, obj.level,
+                                          obj.damage_min, obj.damage_max, obj.element,
+                                          obj.special_name, obj.special_activation, obj.special_effect, obj.special_damage, obj.special_element, obj.special_damage_type, obj.special_rate,
+                                          obj.bonuses, obj.str, obj.int, obj.dex, obj.end, obj.cha, obj.luk, obj.wis, obj.crit, obj.bonus,
+                                          obj.melee_def, obj.pierce_def, obj.magic_def, obj.block, obj.parry, obj.dodge,
+                                          obj.resists, obj.all, obj.fire, obj.water, obj.wind, obj.ice, obj.stone, obj.nature, obj.energy, obj.light, obj.darkness, obj.bacon,
+                                          obj.metal, obj.silver, obj.poison, obj.disease, obj.good, obj.evil, obj.ebil, obj.fear, obj.health, obj.mana, obj.immobility, obj.shrink))
 
 conn.commit()
 conn.close()
