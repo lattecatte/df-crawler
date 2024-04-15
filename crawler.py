@@ -43,38 +43,6 @@ def get_sqlite_type(attribute):
     else:
         return "TEXT"
 
-def save_to_database(obj):
-    conn = sqlite3.connect("weapons.db")
-    cursor = conn.cursor()
-
-    # create table
-    # attr_val_tuple_list = inspect.getmembers(obj.__class__, lambda a: not(inspect.isroutine(a)))
-    # attr_type_str = ", ".join(f"{name} {get_sqlite_type(value)}" for name, value in attr_val_tuple_list if not name.startswith("__"))
-    # print(attr_val_tuple_list)
-    # print(attr_type_str)
-    columns = inspect.getmembers(obj.__class__, lambda a: not(inspect.isroutine(a)))
-    column_definitions = ', '.join(f'{name} {get_sqlite_type(value)}' for name, value in columns if not name.startswith('__'))
-    # cursor.execute(f'CREATE TABLE IF NOT EXISTS my_table ({column_definitions})')
-    print(columns)
-    print("---------------------")
-    print(column_definitions)
-
-    # cursor.execute(f'CREATE TABLE IF NOT EXISTS weapons (id INTEGER PRIMARY KEY, {attr_type_str})')
-
-    # # convert list to json
-    # values = []
-    # for attr, val in attr_val_tuple_list:
-    #     if isinstance(val, list):
-    #         values.append(json.dumps(getattr(obj, attr)))
-    #     elif not attr.startswith("__"):
-    #         values.append(getattr(obj, attr))
-
-    # # insert data into table
-    # cursor.execute(f"INSERT INTO weapons VALUES (NULL, {', '.join(['?'] * len(values))})", values)
-    
-    # conn.commit()
-    # conn.close()
-
 class Weapon:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -95,14 +63,15 @@ class Weapon:
         self.name = name
         self.description = description
 
-objects = [Weapon(link="", name="", description="", da=False, dc=[], dm=False, rare=False, seasonal=False, special_offer=False,
-                  location_name=[], location_link=[], price=[], required_item_name=[], required_item_link=[], required_item_quantity=[], sellback=[],
-                  item_type="", damage_type="", rarity=0, level=0, damage_min=0, damage_max=0, element="",
-                  special_name="", special_activation="", special_effect="", special_damage="", special_element="", special_damage_type="", special_rate="",
-                  bonuses="", str=0, int=0, dex=0, end=0, cha=0, luk=0, wis=0, crit=0, bonus=0, melee_def=0, pierce_def=0, magic_def=0, block=0, parry=0, dodge=0,
-                  resists="", all=0, fire=0, water=0, wind=0, ice=0, stone=0, nature=0, energy=0, light=0, darkness=0, bacon=0,
-                  metal=0, silver=0, poison=0, disease=0, good=0, evil=0, ebil=0, fear=0,
-                  health=0, mana=0, immobility=0, shrink=0)]
+# objects = [Weapon(link="", name="", description="", da=False, dc=[], dm=False, rare=False, seasonal=False, special_offer=False,
+#                   location_name=[], location_link=[], price=[], required_item_name=[], required_item_link=[], required_item_quantity=[], sellback=[],
+#                   item_type="", damage_type="", rarity=0, level=0, damage_min=0, damage_max=0, element="",
+#                   special_name="", special_activation="", special_effect="", special_damage="", special_element="", special_damage_type="", special_rate="",
+#                   bonuses="", str=0, int=0, dex=0, end=0, cha=0, luk=0, wis=0, crit=0, bonus=0, melee_def=0, pierce_def=0, magic_def=0, block=0, parry=0, dodge=0,
+#                   resists="", all=0, fire=0, water=0, wind=0, ice=0, stone=0, nature=0, energy=0, light=0, darkness=0, bacon=0,
+#                   metal=0, silver=0, poison=0, disease=0, good=0, evil=0, ebil=0, fear=0,
+#                   health=0, mana=0, immobility=0, shrink=0)]
+objects = []
 
 class ForumSpider(scrapy.Spider):
     name = 'forum-spider'
@@ -112,7 +81,7 @@ class ForumSpider(scrapy.Spider):
     def parse(self, response):
         # get item path from DOM tree <td class="msg"> <a>
         test_index = 0
-        test_range = 20
+        test_range = 5
         item_path = response.xpath("//td[@class='msg']/a")[test_index:test_index+test_range]
 
         for item in item_path:
@@ -317,104 +286,16 @@ if __name__ == "__main__":
     process.crawl(ForumSpider)
     process.start()
 
-save_to_database(weapons)
-# # save object attributes to database using sqlite3
-# conn = sqlite3.connect("weps2.db")
-# cursor = conn.cursor()
+# Connect to SQLite database
+conn = sqlite3.connect('weapons.db')
+c = conn.cursor()
 
-# cursor.execute('''CREATE TABLE weapons (
-#                link VARCHAR,
-#                name VARCHAR,
-#                description VARCHAR)
-#                da BOOL,
-#                dm BOOL,
-#                rare BOOL,
-#                seasonal BOOL,
-#                special_offer BOOL,
-#                item_type VARCHAR,
-#                damage_type VARCHAR,
-#                rarity INTEGER,
-#                level INTEGER,
-#                damage_min INTEGER,
-#                damage_max INTEGER,
-#                element VARCHAR,
-#                special_name VARCHAR,
-#                special_activation VARCHAR,
-#                special_effect VARCHAR,
-#                special_damage VARCHAR,
-#                special_element VARCHAR,
-#                special_damage_type VARCHAR,
-#                special_rate VARCHAR,
-#                bonuses VARCHAR,
-#                str INTEGER,
-#                int INTEGER,
-#                dex INTEGER,
-#                end INTEGER,
-#                cha INTEGER,
-#                luk INTEGER,
-#                wis INTEGER,
-#                crit INTEGER,
-#                bonus INTEGER,
-#                melee_def INTEGER,
-#                pierce_def INTEGER,
-#                magic_def INTEGER,
-#                block INTEGER,
-#                parry INTEGER,
-#                dodge INTEGER,
-#                resists VARCHAR,
-#                all INTEGER,
-#                fire INTEGER,
-#                water INTEGER,
-#                wind INTEGER,
-#                ice INTEGER,
-#                stone INTEGER,
-#                nature INTEGER,
-#                energy INTEGER,
-#                light INTEGER,
-#                darkness INTEGER,
-#                bacon INTEGER,
-#                metal INTEGER,
-#                silver INTEGER,
-#                poison INTEGER,
-#                disease INTEGER,
-#                good INTEGER,
-#                evil INTEGER,
-#                ebil INTEGER,
-#                fear INTEGER,
-#                health INTEGER,
-#                mana INTEGER,
-#                immobility INTEGER,
-#                shrink INTEGER''')
+# Define table schema dynamically based on attributes of a sample weapon
+sample_weapon = weapons[next(iter(weapons))]  # Get the first weapon from the dictionary
 
-#             #    -- dc,
-#             #    -- location_name,
-#             #    -- location_link,
-#             #    -- price,
-#             #    -- required_item_name,
-#             #    -- required_item_link,
-#             #    -- required_item_quantity,
-#             #    -- sellback,
-
-
-# for obj in objects:
-#     cursor.execute('''INSERT INTO weapons (link, name, description
-#                                           da, dm, rare, seasonal, special_offer,
-#                                           item_type, damage_type, rarity, level,
-#                                           damage_min, damage_max, element,
-#                                           special_name, special_activation, special_effect, special_damage, special_element, special_damage_type, special_rate,
-#                                           bonuses, str, int, dex, end, cha, luk, wis, crit, bonus,
-#                                           melee_def, pierce_def, magic_def, block, parry, dodge,
-#                                           resists, all, fire, water, wind, ice, stone, nature, energy, light, darkness, bacon,
-#                                           metal, silver, poison, disease, good, evil, ebil, fear, health, mana, immobility, shrink)
-#                     VALUES (?, ?, ?)''', (obj.link, obj.name, obj.description,
-#                                           obj.da, obj.dm, obj.rare, obj.seasonal, obj.special_offer,
-#                                           obj.item_type, obj.damage_type, obj.rarity, obj.level,
-#                                           obj.damage_min, obj.damage_max, obj.element,
-#                                           obj.special_name, obj.special_activation, obj.special_effect, obj.special_damage, obj.special_element, obj.special_damage_type, obj.special_rate,
-#                                           obj.bonuses, obj.str, obj.int, obj.dex, obj.end, obj.cha, obj.luk, obj.wis, obj.crit, obj.bonus,
-#                                           obj.melee_def, obj.pierce_def, obj.magic_def, obj.block, obj.parry, obj.dodge,
-#                                           obj.resists, obj.all, obj.fire, obj.water, obj.wind, obj.ice, obj.stone, obj.nature, obj.energy, obj.light, obj.darkness, obj.bacon,
-#                                           obj.metal, obj.silver, obj.poison, obj.disease, obj.good, obj.evil, obj.ebil, obj.fear, obj.health, obj.mana, obj.immobility, obj.shrink))
-
-# conn.commit()
-# conn.close()
+print(weapons.items())
+for weapon_id, weapon_obj in weapons.items():
+    print("--->", weapon_id)
+    for attr, val in weapon_obj.__dict__.items():
+        print("-------->", f"{attr}: {val}")
+        
