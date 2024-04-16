@@ -1,24 +1,30 @@
 import re
 from datetime import datetime 
 import inspect
-import json
-
 import scrapy
 from scrapy.crawler import CrawlerProcess
-import csv
 import sqlite3
-
-weapons = dict()
+import json
 
 # sometimes the category "Bonuses:" is listed as "Stats:" on the forums
 category_list = [" Price:", " Sellback:", " Level:", " Element:",
                  " Bonuses:", " Stats:", " Resists:", " Rarity:", " Item Type:", " Damage Type:",
                  " Special Name:", " Special Activation:", " Special Damage:", " Special Effect:", " Special Element:", " Special Damage Type:", " Special Rate:",
                  " Damage:"]
-
 category_attr = ["price", "sellback", "level", "element",
                  "bonuses", "bonuses", "resists", "rarity", "item_type", "damage_type",
                  "special_name", "special_activation", "special_damage", "special_effect", "special_element", "special_damage_type", "special_rate"]
+weapons = dict()
+objects = []
+str_attr = ["link", "name", "description", "item_type", "damage_type", "element",
+            "special_name", "special_activation", "special_effect", "special_damage", "special_element", "special_damage_type", "special_rate",
+            "bonuses", "resists"]
+int_attr = ["rarity", "level", "damage_min", "damage_max",
+            "str", "int", "dex", "end", "cha", "luk", "wis", "crit", "bonus", "melee_def", "pierce_def", "magic_def", "block", "parry", "dodge",
+            "\"all\"", "fire", "water", "wind", "ice", "stone", "nature", "energy", "light", "darkness", "bacon",
+            "metal", "silver", "poison", "disease", "good", "evil", "ebil", "fear", "health", "mana", "immobility", "shrink"]
+bool_attr = ["da", "dm", "rare", "seasonal", "special_offer"]
+list_attr = ["dc", "location_name, location_link", "price", "required_item_name", "required_item_link", "required_item_quantity", "sellback"]
 
 # extract content between two keywords
 def extract_content_between_words(page, start_word, end_word):
@@ -42,12 +48,50 @@ def get_sqlite_type(attribute):
         return "TEXT" # to JSON
     else:
         return "TEXT"
+    
+def save_to_database():
+    # connect to sqlite db
+    conn = sqlite3.connect('weapons.db')
+    c = conn.cursor()
+
+    # column definitions
+    str_column_def = ", ".join(f"{a} VARCHAR" for a in str_attr)
+    int_column_def = ", ".join(f"{a} INTEGER" for a in int_attr)
+    bool_column_def = ", ".join(f"{a} BOOLEAN" for a in bool_attr)
+    list_column_def = ", ".join(f"{a} TEXT" for a in list_attr)
+    column_def = ", ".join([str_column_def, int_column_def, bool_column_def, list_column_def])
+
+    # create table with column definitions
+    c.execute("DROP TABLE IF EXISTS weapons")
+    c.execute(f"CREATE TABLE weapons({column_def})")
+
+    # insert a row for each weapon (existing attributes)
+    for weapon_id, weapon_obj in weapons.items():
+        standard_attr = []
+        standard_val = []
+        for attr, val in weapon_obj.__dict__.items():
+            if attr in str_attr:
+                standard_attr.append(attr)
+                standard_val.append(val)
+        standard_val = [x.decode("utf-8") if isinstance(x, bytes) else x for x in standard_val]
+        standard_val = [json.dumps(x) if type(x) == list else x for x in standard_val]
+        print("-------------")
+        print(standard_attr)
+        print("++++++++++++")
+        print(standard_val)
+        standard_attr_str = ", ".join(f"{a}" for a in standard_attr)
+        question_str = ", ".join(["?"] * len(standard_attr))
+
+        # if standard_attr_str:
+        c.execute(f"INSERT INTO weapons({standard_attr_str}) VALUES({question_str})", standard_val)
+        
+    conn.commit()
+    conn.close()
 
 class Weapon:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-
         self.location_name = []
         self.location_link = []
         self.price = [] # array because multiple sources of the weapon
@@ -63,16 +107,6 @@ class Weapon:
         self.name = name
         self.description = description
 
-# objects = [Weapon(link="", name="", description="", da=False, dc=[], dm=False, rare=False, seasonal=False, special_offer=False,
-#                   location_name=[], location_link=[], price=[], required_item_name=[], required_item_link=[], required_item_quantity=[], sellback=[],
-#                   item_type="", damage_type="", rarity=0, level=0, damage_min=0, damage_max=0, element="",
-#                   special_name="", special_activation="", special_effect="", special_damage="", special_element="", special_damage_type="", special_rate="",
-#                   bonuses="", str=0, int=0, dex=0, end=0, cha=0, luk=0, wis=0, crit=0, bonus=0, melee_def=0, pierce_def=0, magic_def=0, block=0, parry=0, dodge=0,
-#                   resists="", all=0, fire=0, water=0, wind=0, ice=0, stone=0, nature=0, energy=0, light=0, darkness=0, bacon=0,
-#                   metal=0, silver=0, poison=0, disease=0, good=0, evil=0, ebil=0, fear=0,
-#                   health=0, mana=0, immobility=0, shrink=0)]
-objects = []
-
 class ForumSpider(scrapy.Spider):
     name = 'forum-spider'
     start_urls = ['https://forums2.battleon.com/f/tm.asp?m=22094733']
@@ -81,9 +115,8 @@ class ForumSpider(scrapy.Spider):
     def parse(self, response):
         # get item path from DOM tree <td class="msg"> <a>
         test_index = 0
-        test_range = 5
+        test_range = 100
         item_path = response.xpath("//td[@class='msg']/a")[test_index:test_index+test_range]
-
         for item in item_path:
             # # get item name from <td class="msg"> <a> text
             # item_name = item.xpath("text()").get().encode("utf-8")
@@ -110,7 +143,6 @@ class ForumSpider(scrapy.Spider):
                 url = response.request.url
                 url_num = url.replace("https://forums2.battleon.com/f/tm.asp?m=", "")
                 id = str(url_num) + "_" + str(index)
-
                 weapons[id] = Weapon()
                 objects.append(weapons[id])
 
@@ -131,17 +163,14 @@ class ForumSpider(scrapy.Spider):
                     setattr(weapons[id], "dm", True)
                 else:
                     setattr(weapons[id], "dm", False)
-
                 if "https://media.artix.com/encyc/df/tags/Rare.jpg" in [x for x in img]:
                     setattr(weapons[id], "rare", True)
                 else:
                     setattr(weapons[id], "rare", False)
-
                 if "https://media.artix.com/encyc/df/tags/Seasonal.jpg" in [x for x in img]:
                     setattr(weapons[id], "seasonal", True)
                 else:
                     setattr(weapons[id], "seasonal", False)
-                
                 if "https://media.artix.com/encyc/df/tags/SpecialOffer.jpg" in [x for x in img]:
                     setattr(weapons[id], "special_offer", True)
                 else:
@@ -159,16 +188,13 @@ class ForumSpider(scrapy.Spider):
                 
                 for loc in location:
                     location_trimmed = extract_content_between_words(loc, 'href="', "</a>")
-
                     location_name = location_trimmed[0].split('">')[1]
                     weapons[id].append_attr("location_name", location_name)
-
                     location_link = location_trimmed[0].split('">')[0]
                     weapons[id].append_attr("location_link", location_link)
                     
                 # get required item quantity, name and link
                 req = extract_content_between_words(message, "Required Items:", "Sellback:")
-
                 for index, rq in enumerate(req):
                     clean_string = re.sub(r'<[^>]*>', '', rq) # remove html tags
                     integers = re.findall(r'\b\d+\b', clean_string)
@@ -180,7 +206,6 @@ class ForumSpider(scrapy.Spider):
                     for r in req_trimmed:
                         req_name = r.split('">')[1]
                         weapons[id].append_attr("required_item_name", req_name)
-
                         req_link = r.split('">')[0]
                         weapons[id].append_attr("required_item_link", req_link)
                     
@@ -257,45 +282,12 @@ class ForumSpider(scrapy.Spider):
 
                 print("+++++++++++++++++++++++++++++++++++++")
         
-        # # ----- export object attr to csv ----- #
-
-        # # since attribute column order will be random, get the base attributes in the correct order from first object
-        # base_attributes = list(vars(objects[0]).keys())
-
-        # # extracting additional attributes dynamically  
-        # additional_attributes = set()
-        
-        # for obj in objects:
-        #     additional_attributes.update(set(vars(obj).keys()) - set(base_attributes))
-
-        # # writing to csv
-        # filename = "weapons-" + datetime.today().strftime('%Y-%m-%d')
-        # with open(filename + ".csv", "w", newline="") as csvfile:
-        #     writer = csv.DictWriter(csvfile, fieldnames=base_attributes + list(additional_attributes))
-        #     writer.writeheader()
-
-        #     for obj in objects:
-        #         writer.writerow(vars(obj))
-
 if __name__ == "__main__":
     process = CrawlerProcess(settings={
         # specify any settings if needed
         "LOG_ENABLED": False  # Disable logging if not needed
     })
-
     process.crawl(ForumSpider)
     process.start()
 
-# Connect to SQLite database
-conn = sqlite3.connect('weapons.db')
-c = conn.cursor()
-
-# Define table schema dynamically based on attributes of a sample weapon
-sample_weapon = weapons[next(iter(weapons))]  # Get the first weapon from the dictionary
-
-print(weapons.items())
-for weapon_id, weapon_obj in weapons.items():
-    print("--->", weapon_id)
-    for attr, val in weapon_obj.__dict__.items():
-        print("-------->", f"{attr}: {val}")
-        
+save_to_database()
