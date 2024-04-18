@@ -21,11 +21,10 @@ str_attr = ["link", "name", "description", "item_type", "damage_type", "element"
             "bonuses", "resists"]
 int_attr = ["rarity", "level", "damage_min", "damage_max",
             "str", "int", "dex", "end", "cha", "luk", "wis", "crit", "bonus", "melee_def", "pierce_def", "magic_def", "block", "parry", "dodge",
-            "\"all\"", "fire", "water", "wind", "ice", "stone", "nature", "energy", "light", "darkness", "bacon",
+            "all_resist", "fire", "water", "wind", "ice", "stone", "nature", "energy", "light", "darkness", "bacon",
             "metal", "silver", "poison", "disease", "good", "evil", "ebil", "fear", "health", "mana", "immobility", "shrink"]
 bool_attr = ["da", "dm", "rare", "seasonal", "special_offer"]
-list_attr = ["dc", "location_name, location_link", "price", "required_item_name", "required_item_link", "required_item_quantity", "sellback"]
-
+list_attr = ["dc", "location_name", "location_link", "price", "required_item_name", "required_item_link", "required_item_quantity", "sellback"]
 # extract content between two keywords
 def extract_content_between_words(page, start_word, end_word):
     pattern = re.compile(r'{}(.*?){}'.format(re.escape(start_word), re.escape(end_word)), re.DOTALL)
@@ -36,7 +35,7 @@ def extract_content_between_words(page, start_word, end_word):
 def filter_list(main_list, sub_list):
     return [m for m in main_list if any(m.startswith(s) for s in sub_list)]
 
-# check attribute data type in python and return acorresponding data type for sqlite
+# check attribute data type in python and return corresponding data type for sqlite
 def get_sqlite_type(attribute):
     if isinstance(attribute, str):
         return "VARCHAR"
@@ -70,7 +69,12 @@ def save_to_database():
         standard_attr = []
         standard_val = []
         for attr, val in weapon_obj.__dict__.items():
-            if attr in str_attr:
+            print("----->", attr, val)
+            if attr == "all":
+                attr = "all_resist"
+            else:
+                pass
+            if attr in str_attr or attr in int_attr or attr in bool_attr or attr in list_attr:
                 standard_attr.append(attr)
                 standard_val.append(val)
         standard_val = [x.decode("utf-8") if isinstance(x, bytes) else x for x in standard_val]
@@ -285,7 +289,7 @@ class ForumSpider(scrapy.Spider):
 if __name__ == "__main__":
     process = CrawlerProcess(settings={
         # specify any settings if needed
-        "LOG_ENABLED": False  # Disable logging if not needed
+        "LOG_ENABLED": False  # disable logging if not needed
     })
     process.crawl(ForumSpider)
     process.start()
