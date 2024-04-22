@@ -1,13 +1,11 @@
 import scrapy
 from scrapy.crawler import CrawlerProcess
-# import sqlite3
 
 from utils.filter_utils import *
 from utils.weapon_utils import *
 from utils.crawler_utils import *
 from utils.database_utils import *
 
-        
 # run spider
 process = CrawlerProcess(settings={
     # specify any settings if needed

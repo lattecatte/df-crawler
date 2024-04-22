@@ -1,4 +1,5 @@
 import scrapy
+from .filter_utils import *
 from .weapon_utils import *
 
 # sometimes the category "Bonuses:" is listed as "Stats:" on the forums

@@ -1,5 +1,6 @@
 import sqlite3
 import json
+from datetime import datetime
 
 from .weapon_utils import *
 
@@ -13,22 +14,23 @@ int_attr = ["rarity", "level", "damage_min", "damage_max",
 bool_attr = ["da", "dm", "rare", "seasonal", "special_offer"]
 list_attr = ["dc", "location_name", "location_link", "price", "required_item_name", "required_item_link", "required_item_quantity", "sellback"]
 
-# # check attribute data type in python and return corresponding data type for sqlite
-# def get_sqlite_type(attribute):
-#     if isinstance(attribute, str):
-#         return "VARCHAR"
-#     elif isinstance(attribute, int):
-#         return "INTEGER"
-#     elif isinstance(attribute, bool):
-#         return "BOOLEAN"
-#     elif isinstance(attribute, list):
-#         return "TEXT" # to JSON
-#     else:
-#         return "TEXT"
+# check attribute data type in python and return corresponding data type for sqlite
+def get_sqlite_type(attribute):
+    if isinstance(attribute, str):
+        return "VARCHAR"
+    elif isinstance(attribute, int):
+        return "INTEGER"
+    elif isinstance(attribute, bool):
+        return "BOOLEAN"
+    elif isinstance(attribute, list):
+        return "TEXT" # to JSON
+    else:
+        return "TEXT"
 
 def save_to_database():
     # connect to sqlite db
-    conn = sqlite3.connect('weapons.db')
+    formatted_date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    conn = sqlite3.connect("weapons_" + formatted_date + ".db")
     c = conn.cursor()
 
     # column definitions
@@ -56,6 +58,11 @@ def save_to_database():
             if attr in str_attr or attr in int_attr or attr in bool_attr or attr in list_attr:
                 standard_attr.append(attr)
                 standard_val.append(val)
+            else:
+                c.execute(f"ALTER TABLE weapons ADD COLUMN {attr} {get_sqlite_type(attr)}")
+                standard_attr.append(attr)
+                standard_val.append(val)
+                
         # decode utf-8 and dump list columns into json
         standard_val = [x.decode("utf-8") if isinstance(x, bytes) else x for x in standard_val]
         standard_val = [json.dumps(x) if type(x) == list else x for x in standard_val]
