@@ -2,7 +2,7 @@ import sqlite3
 import json
 from datetime import datetime
 
-from .weapon_utils import *
+from .item_utils import *
 
 str_attr = ["link", "name", "description", "item_type", "damage_type", "element",
             "special_name", "special_activation", "special_effect", "special_damage", "special_element", "special_damage_type", "special_rate",
@@ -27,11 +27,11 @@ def get_sqlite_type(attribute):
     else:
         return "TEXT"
 
-def save_to_database():
+def save_to_database(item_type):
     # connect to sqlite db
     formatted_date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    db_path = "./data/weapons_" + formatted_date + ".db"
-    conn = sqlite3.connect()
+    db_path = "./data/" + item_type + "_" + formatted_date + ".db"
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
     # column definitions
@@ -42,14 +42,14 @@ def save_to_database():
     column_def = ", ".join([str_column_def, int_column_def, bool_column_def, list_column_def])
 
     # create table with column definitions
-    c.execute("DROP TABLE IF EXISTS weapons")
-    c.execute(f"CREATE TABLE weapons({column_def})")
+    c.execute(f"DROP TABLE IF EXISTS {item_type}")
+    c.execute(f"CREATE TABLE {item_type}({column_def})")
 
-    # insert a row for each weapon (existing attributes)
-    for weapon_id, weapon_obj in weapons.items():
+    # insert a row for each item (existing attributes)
+    for item_id, item_obj in items.items():
         row_attr = []
         row_val = []
-        for attr, val in weapon_obj.__dict__.items():
+        for attr, val in item_obj.__dict__.items():
             # print("----->", attr, val)
 
             # all is an SQL keyword so it has to be modified to prevent errors
@@ -57,9 +57,9 @@ def save_to_database():
                 attr = "all_resist"
             # non standard attributes
             elif attr not in str_attr + int_attr + bool_attr + list_attr:
-                # print(weapon_obj.name, weapon_obj.link, attr, get_sqlite_type(attr))
+                # print(item_obj.name, item_obj.link, attr, get_sqlite_type(attr))
                 # escape attr str with single quotes
-                c.execute(f"ALTER TABLE weapons ADD COLUMN '{attr}' INTEGER") # use {get_sqlite_type(attr)} instead of INTEGER for future uses that are not limited to resists
+                c.execute(f"ALTER TABLE {item_type} ADD COLUMN '{attr}' INTEGER") # use {get_sqlite_type(attr)} instead of INTEGER for future uses that are not limited to resists
                 int_attr.append(attr)
             row_attr.append(attr)
             row_val.append(val)
@@ -70,7 +70,7 @@ def save_to_database():
         row_attr_str = ", ".join(f"'{a}'" for a in row_attr)
         question_str = ", ".join(["?"] * len(row_attr))
 
-        c.execute(f"INSERT INTO weapons({row_attr_str}) VALUES({question_str})", row_val)
+        c.execute(f"INSERT INTO {item_type}({row_attr_str}) VALUES({question_str})", row_val)
         
     conn.commit()
     conn.close()

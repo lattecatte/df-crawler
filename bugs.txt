@@ -1,0 +1,3 @@
+dm, special_offer, dc attributes
+a handful of weapons like vanilla ice katana missing info on almost all columns
+check accessories as well
