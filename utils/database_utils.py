@@ -30,7 +30,8 @@ def get_sqlite_type(attribute):
 def save_to_database():
     # connect to sqlite db
     formatted_date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    conn = sqlite3.connect("weapons_" + formatted_date + ".db")
+    db_path = "./data/weapons_" + formatted_date + ".db"
+    conn = sqlite3.connect()
     c = conn.cursor()
 
     # column definitions
@@ -46,28 +47,30 @@ def save_to_database():
 
     # insert a row for each weapon (existing attributes)
     for weapon_id, weapon_obj in weapons.items():
-        standard_attr = []
-        standard_val = []
+        row_attr = []
+        row_val = []
         for attr, val in weapon_obj.__dict__.items():
             # print("----->", attr, val)
+
             # all is an SQL keyword so it has to be modified to prevent errors
             if attr == "all":
                 attr = "all_resist"
-            elif attr in str_attr + int_attr + bool_attr + list_attr:
-                pass
-            else:
-                print(weapon_obj.name, weapon_obj.link, attr, get_sqlite_type(attr))
-                c.execute(f"ALTER TABLE weapons ADD COLUMN '{str(attr)}' {get_sqlite_type(attr)}")
-            standard_attr.append(attr)
-            standard_val.append(val)
+            # non standard attributes
+            elif attr not in str_attr + int_attr + bool_attr + list_attr:
+                # print(weapon_obj.name, weapon_obj.link, attr, get_sqlite_type(attr))
+                # escape attr str with single quotes
+                c.execute(f"ALTER TABLE weapons ADD COLUMN '{attr}' INTEGER") # use {get_sqlite_type(attr)} instead of INTEGER for future uses that are not limited to resists
+                int_attr.append(attr)
+            row_attr.append(attr)
+            row_val.append(val)
                 
         # decode utf-8 and dump list columns into json
-        standard_val = [x.decode("utf-8") if isinstance(x, bytes) else x for x in standard_val]
-        standard_val = [json.dumps(x) if type(x) == list else x for x in standard_val]
-        standard_attr_str = ", ".join(f"{a}" for a in standard_attr)
-        question_str = ", ".join(["?"] * len(standard_attr))
+        row_val = [x.decode("utf-8") if isinstance(x, bytes) else x for x in row_val]
+        row_val = [json.dumps(x) if type(x) == list else x for x in row_val]
+        row_attr_str = ", ".join(f"'{a}'" for a in row_attr)
+        question_str = ", ".join(["?"] * len(row_attr))
 
-        c.execute(f"INSERT INTO weapons('{standard_attr_str}') VALUES({question_str})", standard_val)
+        c.execute(f"INSERT INTO weapons({row_attr_str}) VALUES({question_str})", row_val)
         
     conn.commit()
     conn.close()
