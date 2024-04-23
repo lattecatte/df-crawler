@@ -21,7 +21,7 @@ class ForumSpider(scrapy.Spider):
         # get item path from DOM tree <td class="msg"> <a>
         test_index = 0
         test_range = 100
-        item_path = response.xpath("//td[@class='msg']/a")[test_index:test_index+test_range]
+        item_path = response.xpath("//td[@class='msg']/a")#[test_index:test_index+test_range]
         for item in item_path:
             # # get item name from <td class="msg"> <a> text
             # item_name = item.xpath("text()").get().encode("utf-8")

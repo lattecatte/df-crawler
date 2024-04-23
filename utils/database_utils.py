@@ -49,19 +49,17 @@ def save_to_database():
         standard_attr = []
         standard_val = []
         for attr, val in weapon_obj.__dict__.items():
-            print("----->", attr, val)
+            # print("----->", attr, val)
             # all is an SQL keyword so it has to be modified to prevent errors
             if attr == "all":
                 attr = "all_resist"
-            else:
+            elif attr in str_attr + int_attr + bool_attr + list_attr:
                 pass
-            if attr in str_attr or attr in int_attr or attr in bool_attr or attr in list_attr:
-                standard_attr.append(attr)
-                standard_val.append(val)
             else:
-                c.execute(f"ALTER TABLE weapons ADD COLUMN {attr} {get_sqlite_type(attr)}")
-                standard_attr.append(attr)
-                standard_val.append(val)
+                print(weapon_obj.name, weapon_obj.link, attr, get_sqlite_type(attr))
+                c.execute(f"ALTER TABLE weapons ADD COLUMN '{str(attr)}' {get_sqlite_type(attr)}")
+            standard_attr.append(attr)
+            standard_val.append(val)
                 
         # decode utf-8 and dump list columns into json
         standard_val = [x.decode("utf-8") if isinstance(x, bytes) else x for x in standard_val]
@@ -69,7 +67,7 @@ def save_to_database():
         standard_attr_str = ", ".join(f"{a}" for a in standard_attr)
         question_str = ", ".join(["?"] * len(standard_attr))
 
-        c.execute(f"INSERT INTO weapons({standard_attr_str}) VALUES({question_str})", standard_val)
+        c.execute(f"INSERT INTO weapons('{standard_attr_str}') VALUES({question_str})", standard_val)
         
     conn.commit()
     conn.close()
