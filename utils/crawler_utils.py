@@ -24,8 +24,8 @@ class ForumSpider(scrapy.Spider):
     # parsing A-Z page
     def parse(self, response):
         # get item path from DOM tree <td class="msg"> <a>
-        test_index = 0
-        test_range = 100
+        test_index = 50
+        test_range = 50
         item_path = response.xpath("//td[@class='msg']/a")#[test_index:test_index+test_range]
         for item in item_path:
             # # get item name from <td class="msg"> <a> text
@@ -47,7 +47,10 @@ class ForumSpider(scrapy.Spider):
             name_path = msg_path.xpath("font/b/text() | b/font/text()")
             name = name_path.getall()
             name = [x.encode("utf-8") for x in name]
-            
+            # get image for tags logic
+            img_path = msg_path.xpath("img/@src | li/img/@src")
+            img = img_path.getall()
+
             if name:
                 # create object (object name is url + msg index in individual item page)
                 url = response.request.url
@@ -67,9 +70,7 @@ class ForumSpider(scrapy.Spider):
                 setattr(items[id], "description", desc[0])
 
                 # get dm, rare, seasonal, special offer tags from images in <img>
-                img_path = msg_path.xpath("img/@src | li/img/@src")
-                img = img_path.getall()
-                if "https://media.artix.com/encyc/df/tags/DM.jpg" in [x for x in img]:
+                if "https://media.artix.com/encyc/df/tags/DM.png" in [x for x in img]:
                     setattr(items[id], "dm", True)
                 else:
                     setattr(items[id], "dm", False)
@@ -81,7 +82,7 @@ class ForumSpider(scrapy.Spider):
                     setattr(items[id], "seasonal", True)
                 else:
                     setattr(items[id], "seasonal", False)
-                if "https://media.artix.com/encyc/df/tags/SpecialOffer.jpg" in [x for x in img]:
+                if "https://media.artix.com/encyc/df/tags/SpecialOffer.png" in [x for x in img]:
                     setattr(items[id], "special_offer", True)
                 else:
                     setattr(items[id], "special_offer", False)
@@ -175,12 +176,18 @@ class ForumSpider(scrapy.Spider):
                                             resists_value = -1 * int(res.split("-")[1])
                                             setattr(items[id], resists_name[k], resists_value)
                 
-                # get dc tag from sellback     
-                for index, slb in enumerate(items[id].sellback):
-                    if "Dragon Coins" or "N/A" in slb:
+                # get dc tag: for single variant (aka sellback len is 1) check images for dc tag, for multi variants check if sellback str contains DC or N/A keywords
+                if len(items[id].sellback) == 1:
+                    if "https://media.artix.com/encyc/df/tags/DC.png" in [x for x in img]:
                         items[id].append_attr("dc", True)
                     else:
                         items[id].append_attr("dc", False)
+                else:
+                    for slb in items[id].sellback:
+                        if "Dragon Coins" in slb: # or "N/A"
+                            items[id].append_attr("dc", True)
+                        else:
+                            items[id].append_attr("dc", False)
 
                 # debug
                 print(name)
