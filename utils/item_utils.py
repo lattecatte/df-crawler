@@ -18,4 +18,4 @@ class Item:
         self.description = description
 
 item_list = []
-items = dict()
+items = {}
