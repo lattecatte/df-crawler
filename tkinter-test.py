@@ -30,10 +30,11 @@ def lb_item_select(event):
         # item_name = lb.get(selected_index)
         item_row = data[selected_index]
         print(item_row)
-        # for idx, lab in enumerate(labels):
-        #     column_name = lab.cget(columns[idx])
-        #     # labels[idx].config(text=f"Name: {item_row[column_dict['name']]}")
-        #     lab.config(text=f"kek: {item_row[column_dict['name']]}")
+        for idx, lab in enumerate(labels):
+            # # labels[idx].config(text=f"Name: {item_row[column_dict['name']]}")
+            lab.config(text=f"{columns[idx]}: {item_row[column_dict[columns[idx]]]}")
+
+        lbd.insert(tk.END, "kekw")
         
         
 
@@ -84,6 +85,9 @@ for idx, col in enumerate(columns):
     label.grid(column=1, row=rb_grid_count+idx+1, sticky=tk.NW, padx=5)
     labels.append(label)
 
+# REMEMBER TO CHANGE THIS TO FRAME
+lbd = tk.Listbox(root, width=50, height=30, font=custom_font, bg="#ebe2c5", selectbackground="#cbd8fe", selectborderwidth=2, relief="solid")
+lbd.grid(column=2, row=rb_grid_count+1, rowspan=50, sticky=tk.NW, padx=5, pady=5)
 
 # update listbox upon item selection
 lb.bind("<<ListboxSelect>>", lb_item_select)
