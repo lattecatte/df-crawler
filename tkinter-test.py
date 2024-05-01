@@ -49,35 +49,46 @@ def lb_item_select(event):
         type_label = tk.Label(fr, text=f"{item_row[column_dict['item_type']].rstrip()}, Lvl {item_row[column_dict['level']]}", font=type_font, fg="#007800", bg="#ebe2c5")
         type_label.pack(anchor="w")
         # description
-        desc_label = tk.Label(fr, text=f"{item_row[column_dict['description']]}", font=standard_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        desc_label = tk.Label(fr, text=f"{item_row[column_dict['description']]}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
         desc_label.pack(anchor="w", padx=5)
         # damage string
-        dmg_str_label = tk.Label(fr, text="Damage:", font=bold_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        dmg_str_label = tk.Label(fr, text="Damage:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
         dmg_str_label.pack(anchor="w", padx=(5,0))
         # damage and element
-        dmg_label = tk.Label(fr, text=f"{item_row[column_dict['damage_min']]}-{item_row[column_dict['damage_max']]}{item_row[column_dict['element']]}", font=standard_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        dmg_label = tk.Label(fr, text=f"{item_row[column_dict['damage_min']]}-{item_row[column_dict['damage_max']]}{item_row[column_dict['element']]}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
         dmg_label.pack(anchor="w", padx=(5,0))
         # rarity string
-        rrt_str_label = tk.Label(fr, text="Rarity:", font=bold_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        rrt_str_label = tk.Label(fr, text="Rarity:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
         rrt_str_label.pack(anchor="w", padx=(5,0))
         # rarity
-        rrt_label = tk.Label(fr, text=f"{item_row[column_dict['rarity']]}", font=standard_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        rrt_label = tk.Label(fr, text=f"{item_row[column_dict['rarity']]}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
         rrt_label.pack(anchor="w", padx=(5,0))
         # stats string
-        stats_str_label = tk.Label(fr, text="Stats:", font=bold_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        stats_str_label = tk.Label(fr, text="Stats:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
         stats_str_label.pack(anchor="w", padx=(5,0))
         # stats
-        stats_label = tk.Label(fr, text=f"{item_row[column_dict['bonuses']].lstrip()}", font=standard_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        stats_label = tk.Label(fr, text=f"{item_row[column_dict['bonuses']].lstrip()}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
         stats_label.pack(anchor="w", padx=(5,0))
         # resists string
-        resists_str_label = tk.Label(fr, text="Resists:", font=bold_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        resists_str_label = tk.Label(fr, text="Resists:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
         resists_str_label.pack(anchor="w", padx=(5,0))
         # resists
-        resists_label = tk.Label(fr, text=f"{item_row[column_dict['resists']].lstrip()}", font=standard_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        resists_label = tk.Label(fr, text=f"{item_row[column_dict['resists']].lstrip()}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
         resists_label.pack(anchor="w", padx=(5,0))
+        # dummy label
+        dummy_label = tk.Label(fr, bg="#ebe2c5")
+        dummy_label.pack()
+        # special
+        if item_row[column_dict['special_name']]:
+            sp_name_str_label = tk.Label(fr, text="Special Name:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+            sp_name_str_label.pack(anchor="w", padx=(5,0))
+            sp_name_label = tk.Label(fr, text=f"{item_row[column_dict['special_name']].lstrip()}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+            sp_name_label.pack(anchor="w", padx=(5,0))
+            sp_act_str_label = tk.Label(fr, text="Special Activation:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+            sp_act_str_label.pack(anchor="w", padx=(5,0))
+            sp_act_label = tk.Label(fr, text=f"{item_row[column_dict['special_activation']].lstrip()}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+            sp_act_label.pack(anchor="w", padx=(5,0))
 
-        # for idx, fl in enumerate(frame_labels):
-        #     fl.grid(column=0, row=idx, padx=5, pady=5)
 
 
 # initialize tkinter
@@ -86,8 +97,10 @@ root.configure(bg="#eacea6")
 root.geometry("1000x750")
 
 # fonts
-standard_font = font.Font(family="Helvetica", size=12)
-bold_font = font.Font(family="Helvetica", size=12, weight="bold")
+standard10_font = font.Font(family="Helvetica", size=10)
+bold10_font = font.Font(family="Helvetica", size=10, weight="bold")
+standard12_font = font.Font(family="Helvetica", size=12)
+bold12_font = font.Font(family="Helvetica", size=12, weight="bold")
 
 # connect to db and fetchall data
 conn = sqlite3.connect("./data/weapons.db")
@@ -103,7 +116,7 @@ print(columns)
 column_dict = {col: index for index, col in enumerate(columns)}
 
 # create sort by label
-sort_by_label = tk.Label(root, text="Sort by:", font=standard_font, bg="#eacea6")
+sort_by_label = tk.Label(root, text="Sort by:", font=standard12_font, bg="#eacea6")
 sort_by_label.grid(column=0, row=0, sticky=tk.W, padx=5, pady=5)
 
 # create radio buttons
@@ -111,14 +124,14 @@ rb_column = tk.StringVar() # tkinter IntVar for tracking radio button selection
 sorting_columns = columns[0:3]
 rb_grid_count = len(sorting_columns) + 1
 for idx, col in enumerate(sorting_columns):
-    rb = tk.Radiobutton(root, text=col, font=standard_font, variable=rb_column, value=col, command=lambda c=col: rb_sort(c), bg="#eacea6")
+    rb = tk.Radiobutton(root, text=col, font=standard12_font, variable=rb_column, value=col, command=lambda c=col: rb_sort(c), bg="#eacea6")
     rb.grid(column=0, row=idx+1, sticky=tk.W, padx=5)
 
 # create listbox
 custom_font = font.Font(family="Helvetica", size=10, weight="bold")
 custom_style = ttk.Style()
 
-lb = tk.Listbox(root, width=30, height=20, font=custom_font, bg="#ebe2c5", selectbackground="#cbd8fe", selectborderwidth=2, relief=tk.SOLID)
+lb = tk.Listbox(root, width=30, height=30, font=custom_font, bg="#ebe2c5", selectbackground="#cbd8fe", selectborderwidth=2, relief=tk.SOLID)
 lb.grid(column=0, row=rb_grid_count+1, rowspan=50, sticky=tk.NW, padx=5, pady=5)
 for row in data:
     lb.insert(tk.END, row[column_dict["name"]])
