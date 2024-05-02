@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import *
 import tkinter.font as font
 import sqlite3
 
@@ -17,22 +17,14 @@ def rb_sort(column_name):
     c.close()
     conn.close()
 
-# def set_label(var):
-#     var_str = 
-#     var.config(text=f"Name: {item_row[column_dict['name']]}")
-
 def lb_item_select(event):
     # get index from listbox item select
     selected_index_tuple = lb.curselection()
     selected_index = selected_index_tuple[0]
 
     if selected_index:
-        # item_name = lb.get(selected_index)
         item_row = data[selected_index]
         print(item_row)
-        for idx, lab in enumerate(labels):
-            # # labels[idx].config(text=f"Name: {item_row[column_dict['name']]}")
-            lab.config(text=f"{columns[idx]}: {item_row[column_dict[columns[idx]]]}")
 
         # create labels inside frame
         # destroy all child widget before creating labels
@@ -89,12 +81,27 @@ def lb_item_select(event):
             sp_act_label = tk.Label(fr, text=f"{item_row[column_dict['special_activation']].lstrip()}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
             sp_act_label.pack(anchor="w", padx=(5,0))
 
+def write_callback(*args):
+    keyword = sv.get()
+    print(keyword)
 
+    # global data
+    # conn = sqlite3.connect("./data/weapons.db")
+    # c = conn.cursor()
+    # c.execute(f"SELECT * FROM weapons WHERE ? ORDER BY {rb_column} ASC", ())
+    # data = c.fetchall()
+
+    # lb.delete(0, tk.END)
+    # for row in data:
+    #     lb.insert(tk.END, row[column_dict["name"]])
+
+    # c.close()
+    # conn.close()
 
 # initialize tkinter
 root = tk.Tk(className="DFCrawler")
 root.configure(bg="#eacea6")
-root.geometry("1000x750")
+root.geometry("800x800")
 
 # fonts
 standard10_font = font.Font(family="Helvetica", size=10)
@@ -115,33 +122,14 @@ columns = [i[0] for i in c.description]
 print(columns)
 column_dict = {col: index for index, col in enumerate(columns)}
 
-# create sort by label
-sort_by_label = tk.Label(root, text="Sort by:", font=standard12_font, bg="#eacea6")
-sort_by_label.grid(column=0, row=0, sticky=tk.W, padx=5, pady=5)
-
-# create radio buttons
-rb_column = tk.StringVar() # tkinter IntVar for tracking radio button selection
-sorting_columns = columns[0:3]
-rb_grid_count = len(sorting_columns) + 1
-for idx, col in enumerate(sorting_columns):
-    rb = tk.Radiobutton(root, text=col, font=standard12_font, variable=rb_column, value=col, command=lambda c=col: rb_sort(c), bg="#eacea6")
-    rb.grid(column=0, row=idx+1, sticky=tk.W, padx=5)
-
 # create listbox
 custom_font = font.Font(family="Helvetica", size=10, weight="bold")
-custom_style = ttk.Style()
+# custom_style = ttk.Style()
 
 lb = tk.Listbox(root, width=30, height=30, font=custom_font, bg="#ebe2c5", selectbackground="#cbd8fe", selectborderwidth=2, relief=tk.SOLID)
-lb.grid(column=0, row=rb_grid_count+1, rowspan=50, sticky=tk.NW, padx=5, pady=5)
+lb.grid(column=0, row=0, sticky=tk.NW, padx=5, pady=5)
 for row in data:
     lb.insert(tk.END, row[column_dict["name"]])
-
-# create labels to display item info
-labels = []
-for idx, col in enumerate(columns):
-    label = tk.Label(root, text=f"{columns[idx]}:", bg="#eacea6")
-    label.grid(column=2, row=rb_grid_count+idx+1, sticky=tk.NW, padx=5)
-    labels.append(label)
 
 # get lb dimensions for frame
 root.update_idletasks()
@@ -149,9 +137,27 @@ lb_height = lb.winfo_height()
 fr_width = 500
 fr_padx = 5
 
+# create sort by label
+sort_by_label = tk.Label(root, text="Sort by:", font=standard12_font, bg="#eacea6")
+sort_by_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
+
+# create radio buttons
+rb_column = tk.StringVar() # tkinter IntVar for tracking radio button selection
+sorting_columns = columns[0:3]
+last_rb_row = len(sorting_columns) + 2
+for idx, col in enumerate(sorting_columns):
+    rb = tk.Radiobutton(root, text=col, font=standard12_font, variable=rb_column, value=col, command=lambda c=col: rb_sort(c), bg="#eacea6")
+    rb.grid(column=0, row=idx+2, sticky=tk.W, padx=5)
+
+# create search entry
+sv = tk.StringVar()
+en = tk.Entry(root, textvariable=sv)
+en.grid(column=0, row=last_rb_row)
+sv.trace_add("write", write_callback)
+
 # create frame to hold item details
 fr = tk.Frame(root, width=fr_width, height=lb_height, bg="#ebe2c5", bd=1, relief=tk.SOLID)
-fr.grid(column=1, row=rb_grid_count+1, rowspan=50, sticky=tk.NW, padx=fr_padx, pady=5)
+fr.grid(column=1, row=0, rowspan=50, sticky=tk.NW, padx=fr_padx, pady=5)
 
 # update listbox upon item selection
 lb.bind("<<ListboxSelect>>", lb_item_select)
