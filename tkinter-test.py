@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import *
 import tkinter.font as font
 import sqlite3
+import json
 
 def rb_sort(column_name):
     global data
@@ -35,12 +36,10 @@ def create_labels(row):
         i.destroy()
     frame_labels = []
     # name
-    name_font = font.Font(family="Helvetica", size=16, weight="bold")
     name_label = tk.Label(fr, text=f"{row[column_dict['name']]}", font=name_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
     name_label.pack(anchor="w", padx=5, pady=(5, 0))
     # weapon type and level
-    type_font = font.Font(family="Helvetica", size=12, weight="bold")
-    type_label = tk.Label(fr, text=f"{row[column_dict['item_type']].strip()}, Lvl {row[column_dict['level']]}", font=type_font, fg="#007800", bg="#ebe2c5")
+    type_label = tk.Label(fr, text=f"{row[column_dict['item_type']].strip()}, Lvl {row[column_dict['level']]}", font=bold12_font, fg="#007800", bg="#ebe2c5")
     type_label.pack(anchor="w", padx=5)
     # description
     desc_label = tk.Label(fr, text=f"{row[column_dict['description']].strip()}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
@@ -99,6 +98,30 @@ def create_labels(row):
         sp_rate_str_label.pack(anchor="w", padx=(5,0))
         sp_rate_label = tk.Label(fr, text=f"{row[column_dict['special_rate']].lstrip()}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
         sp_rate_label.pack(anchor="w", padx=(5,0))
+    # tags
+    if row[column_dict['da']] == True:
+        da_label = tk.Label(fr, text="DA", font=bold10_font, fg="#600246", bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        da_label.pack(side="left", anchor="nw", padx=(5,0))
+    dc_list = json.loads(row[column_dict['dc']])
+    for i in dc_list:
+        if i == True:
+            dc_label = tk.Label(fr, text="DC", font=bold10_font, fg="#007800", bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+            dc_label.pack(side="left", anchor="nw", padx=(5,0))
+        else:
+            dc_label = tk.Label(fr, text="NON-DC", font=bold10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+            dc_label.pack(side="left", anchor="nw", padx=(5,0))
+    if row[column_dict['dm']] == True:
+        dm_label = tk.Label(fr, text="DM", font=bold10_font, fg="#0cacaa", bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        dm_label.pack(side="left", anchor="nw", padx=(5,0))
+    if row[column_dict['rare']] == True:
+        rare_label = tk.Label(fr, text="RARE", font=bold10_font, fg="#ed1c24", bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        rare_label.pack(side="left", anchor="nw", padx=(5,0))
+    if row[column_dict['seasonal']] == True:
+        seasonal_label = tk.Label(fr, text="SEASONAL", font=bold10_font, fg="#b37400", bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        seasonal_label.pack(side="left", anchor="nw", padx=(5,0))
+    if row[column_dict['special_offer']] == True:
+        so_label = tk.Label(fr, text="SPECIAL OFFER", font=bold10_font, fg="#ff6500", bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        so_label.pack(side="left", anchor="nw", padx=(5,0))
 
 def write_callback(*args):
     global filtered_data
@@ -118,6 +141,7 @@ standard10_font = font.Font(family="Helvetica", size=10)
 bold10_font = font.Font(family="Helvetica", size=10, weight="bold")
 standard12_font = font.Font(family="Helvetica", size=12)
 bold12_font = font.Font(family="Helvetica", size=12, weight="bold")
+name_font = font.Font(family="Helvetica", size=16, weight="bold")
 
 # connect to db and fetchall data
 conn = sqlite3.connect("./data/weapons.db")
@@ -140,19 +164,20 @@ for row in data:
 
 # get lb dimensions for frame
 root.update_idletasks()
+lb_width = lb.winfo_width()
 lb_height = lb.winfo_height()
 fr_width = 500
 fr_padx = 5
 
 # create sort by label
-sort_by_label = tk.Label(root, text="Sort by:", font=standard12_font, bg="#eacea6")
+sort_by_label = tk.Label(root, text="Sort by:", font=standard10_font, bg="#eacea6")
 sort_by_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
 
 # create radio buttons
 rb_column = tk.StringVar() # tkinter StringVar for tracking radio button selection
 sorting_columns = columns[0:3]
 for idx, col in enumerate(sorting_columns):    
-    rb = tk.Radiobutton(root, text=col, font=standard12_font, variable=rb_column, value=col, command=lambda c=col: rb_sort(c), bg="#eacea6")
+    rb = tk.Radiobutton(root, text=col, font=standard10_font, variable=rb_column, value=col, command=lambda c=col: rb_sort(c), bg="#eacea6")
     rb.grid(column=0, row=idx+2, sticky=tk.W, padx=5)
 last_rb_row = len(sorting_columns) + 2
 
@@ -164,7 +189,7 @@ en.bind("<KeyRelease>", write_callback)
 
 # create frame to hold item details
 fr = tk.Frame(root, width=fr_width, height=lb_height, bg="#ebe2c5", bd=1, relief=tk.SOLID)
-fr.grid(column=1, row=0, rowspan=50, sticky=tk.NW, padx=fr_padx, pady=5)
+fr.grid(column=1, row=0, sticky=tk.NW, padx=fr_padx, pady=5)
 
 # update listbox upon item selection
 lb.bind("<<ListboxSelect>>", lb_item_select)
