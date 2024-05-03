@@ -169,23 +169,22 @@ lb_height = lb.winfo_height()
 fr_width = 500
 fr_padx = 5
 
+# create search entry
+en_text = tk.StringVar() # tkinter StringVar for tracking search term
+en = tk.Entry(root, textvariable=en_text, width=24)
+en.grid(column=0, row=1, sticky=tk.W, padx=5)
+en.bind("<KeyRelease>", write_callback)
+
 # create sort by label
 sort_by_label = tk.Label(root, text="Sort by:", font=standard10_font, bg="#eacea6")
-sort_by_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
+sort_by_label.grid(column=0, row=2, sticky=tk.W, padx=5, pady=5)
 
 # create radio buttons
 rb_column = tk.StringVar() # tkinter StringVar for tracking radio button selection
 sorting_columns = columns[0:3]
 for idx, col in enumerate(sorting_columns):    
     rb = tk.Radiobutton(root, text=col, font=standard10_font, variable=rb_column, value=col, command=lambda c=col: rb_sort(c), bg="#eacea6")
-    rb.grid(column=0, row=idx+2, sticky=tk.W, padx=5)
-last_rb_row = len(sorting_columns) + 2
-
-# create search entry
-en_text = tk.StringVar() # tkinter StringVar for tracking search term
-en = tk.Entry(root, textvariable=en_text)
-en.grid(column=0, row=last_rb_row)
-en.bind("<KeyRelease>", write_callback)
+    rb.grid(column=0, row=idx+3, sticky=tk.W, padx=5)
 
 # create frame to hold item details
 fr = tk.Frame(root, width=fr_width, height=lb_height, bg="#ebe2c5", bd=1, relief=tk.SOLID)
