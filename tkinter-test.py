@@ -7,13 +7,7 @@ def rb_sort(column_name):
     global data
     conn = sqlite3.connect("./data/weapons.db")
     c = conn.cursor()
-
-    search_term = sv.get()
-    if search_term:
-        print("Search term:", search_term)
-        c.execute(f"SELECT * FROM weapons WHERE name LIKE ? ORDER BY {column_name} ASC", (search_term,))
-    else:
-        c.execute(f"SELECT * FROM weapons ORDER BY {column_name} ASC")
+    c.execute(f"SELECT * FROM weapons ORDER BY {column_name} ASC")
     data = c.fetchall()
 
     lb.delete(0, tk.END)
@@ -27,9 +21,11 @@ def lb_item_select(event):
     # get index from listbox item select
     selected_index_tuple = lb.curselection()
     selected_index = selected_index_tuple[0]
-
     if selected_index:
-        item_row = data[selected_index]
+        if en_text.get() == "":
+            item_row = data[selected_index]
+        else:
+            item_row = filtered_data[selected_index]
         create_labels(item_row)
 
 def create_labels(row):
@@ -105,12 +101,11 @@ def create_labels(row):
         sp_rate_label.pack(anchor="w", padx=(5,0))
 
 def write_callback(*args):
-    global data
-    search_term = sv.get().strip().lower()
-    data = [row for row in data if search_term in row[column_dict["name"]].lower()]
-
+    global filtered_data
+    search_term = en_text.get().strip().lower()
+    filtered_data = [row for row in data if search_term in row[column_dict["name"]].lower()]
     lb.delete(0, tk.END)
-    for row in data:
+    for row in filtered_data:
         lb.insert(tk.END, row[column_dict["name"]])
 
 # initialize tkinter
@@ -156,14 +151,14 @@ sort_by_label.grid(column=0, row=1, sticky=tk.W, padx=5, pady=5)
 # create radio buttons
 rb_column = tk.StringVar() # tkinter StringVar for tracking radio button selection
 sorting_columns = columns[0:3]
-for idx, col in enumerate(sorting_columns):
+for idx, col in enumerate(sorting_columns):    
     rb = tk.Radiobutton(root, text=col, font=standard12_font, variable=rb_column, value=col, command=lambda c=col: rb_sort(c), bg="#eacea6")
     rb.grid(column=0, row=idx+2, sticky=tk.W, padx=5)
 last_rb_row = len(sorting_columns) + 2
 
 # create search entry
-sv = tk.StringVar()
-en = tk.Entry(root, textvariable=sv)
+en_text = tk.StringVar() # tkinter StringVar for tracking search term
+en = tk.Entry(root, textvariable=en_text)
 en.grid(column=0, row=last_rb_row)
 en.bind("<KeyRelease>", write_callback)
 
