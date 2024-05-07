@@ -20,7 +20,6 @@ def rb_sort(column_name):
     conn.close()
 
 def lb_item_select(event):
-    global data, filtered_data
     # get index from listbox item select
     selected_index_tuple = lb.curselection()
     if selected_index_tuple:
@@ -29,6 +28,7 @@ def lb_item_select(event):
             item_row = data[selected_index]
         else:
             item_row = filtered_data[selected_index]
+        print(item_row)
         create_labels(item_row)
 
 def open_link(link):
@@ -58,86 +58,73 @@ def create_labels(row):
     type_label.pack(anchor="w", padx=5)
     # description
     desc_label = tk.Label(fr, text=f"{row[column_dict['description']].strip()}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-    desc_label.pack(anchor="w", padx=5)
+    desc_label.pack(anchor="w", padx=5, pady=(0,10))
     # damage and element
+    dmg_fr = tk.Frame(fr, bg="#ebe2c5")
+    dmg_fr.pack(anchor="w")
     if row[column_dict['damage_min']]:
-        dmg_str_label = tk.Label(fr, text="Damage:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        dmg_str_label.pack(anchor="w", padx=(5,0))
-        dmg_label = tk.Label(fr, text=f"{row[column_dict['damage_min']]}-{row[column_dict['damage_max']]}{row[column_dict['element']]}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        dmg_label.pack(anchor="w", padx=(5,0))
+        dmg_str_label = tk.Label(dmg_fr, text="Damage:", font=bold12_font, bg="#ebe2c5", justify="left")
+        dmg_str_label.pack(side="left", anchor="nw", padx=(5,0))
+        dmg_label = tk.Label(dmg_fr, text=f"{row[column_dict['damage_min']]}-{row[column_dict['damage_max']]}{row[column_dict['element']]}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-18*fr_padx)
+        dmg_label.pack(side="left", anchor="nw")
     # rarity
-    rrt_str_label = tk.Label(fr, text="Rarity:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-    rrt_str_label.pack(anchor="w", padx=(5,0))
-    rrt_label = tk.Label(fr, text=f"{row[column_dict['rarity']]}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-    rrt_label.pack(anchor="w", padx=(5,0))
+    rrt_fr = tk.Frame(fr, bg="#ebe2c5")
+    rrt_fr.pack(anchor="w")
+    rrt_str_label = tk.Label(rrt_fr, text="Rarity:", font=bold12_font, bg="#ebe2c5", justify="left")
+    rrt_str_label.pack(side="left", anchor="nw", padx=(5,0))
+    rrt_label = tk.Label(rrt_fr, text=f"{row[column_dict['rarity']]}", font=standard12_font, bg="#ebe2c5", justify="left",)
+    rrt_label.pack(side="left", anchor="nw")
     # stats
-    stats_str_label = tk.Label(fr, text="Stats:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-    stats_str_label.pack(anchor="w", padx=(5,0))
-    stats_label = tk.Label(fr, text=f"{row[column_dict['bonuses']].strip()}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-    stats_label.pack(anchor="w", padx=(5,0))
+    stats_fr = tk.Frame(fr, bg="#ebe2c5")
+    stats_fr.pack(anchor="w")
+    stats_str_label = tk.Label(stats_fr, text="Stats:", font=bold12_font, bg="#ebe2c5", justify="left")
+    stats_str_label.pack(side="left", anchor="nw", padx=(5,0))
+    stats_label = tk.Label(stats_fr, text=f"{row[column_dict['bonuses']].strip()}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-16*fr_padx)
+    stats_label.pack(side="left", anchor="nw", padx=(5,0))
     # resists
-    resists_str_label = tk.Label(fr, text="Resists:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-    resists_str_label.pack(anchor="w", padx=(5,0))
-    resists_label = tk.Label(fr, text=f"{row[column_dict['resists']].strip()}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-    resists_label.pack(anchor="w", padx=(5,0))
+    res_fr = tk.Frame(fr, bg="#ebe2c5")
+    res_fr.pack(anchor="w")
+    res_str_label = tk.Label(res_fr, text="Resists:", font=bold12_font, bg="#ebe2c5", justify="left")
+    res_str_label.pack(side="left", anchor="nw", padx=(5,0))
+    res_label = tk.Label(res_fr, text=f"{row[column_dict['resists']].strip()}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-18*fr_padx)
+    res_label.pack(side="left", anchor="nw", padx=(5,0))
     # dummy label
     dummy_label = tk.Label(fr, bg="#ebe2c5")
     dummy_label.pack()
-    # special
-    if row[column_dict['special_name']]:
-        sp_labels = []
-        sp_name_str_label = tk.Label(fr, text="Special Name:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_name_str_label.pack(anchor="w", padx=(5,0))
-        sp_name_label = tk.Label(fr, text=f"{row[column_dict['special_name']].lstrip()}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_name_label.pack(anchor="w", padx=(5,0))
-        sp_act_str_label = tk.Label(fr, text="Special Activation:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_act_str_label.pack(anchor="w", padx=(5,0))
-        sp_act_label = tk.Label(fr, text=f"{row[column_dict['special_activation']].lstrip()}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_act_label.pack(anchor="w", padx=(5,0))
-        sp_eff_str_label = tk.Label(fr, text="Special Effect:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_eff_str_label.pack(anchor="w", padx=(5,0))
-        sp_eff_label = tk.Label(fr, text=f"{row[column_dict['special_effect']].lstrip()}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_eff_label.pack(anchor="w", padx=(5,0))
-        sp_dmg_str_label = tk.Label(fr, text="Special Damage:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_dmg_str_label.pack(anchor="w", padx=(5,0))
-        sp_dmg_label = tk.Label(fr, text=f"{row[column_dict['special_damage']]}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_dmg_label.pack(anchor="w", padx=(5,0))
-        sp_elem_str_label = tk.Label(fr, text="Special Element:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_elem_str_label.pack(anchor="w", padx=(5,0))
-        sp_elem_label = tk.Label(fr, text=f"{row[column_dict['special_element']].lstrip()}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_elem_label.pack(anchor="w", padx=(5,0))
-        sp_dtype_str_label = tk.Label(fr, text="Special Damage Type:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_dtype_str_label.pack(anchor="w", padx=(5,0))
-        sp_dtype_label = tk.Label(fr, text=f"{row[column_dict['special_damage_type']].lstrip()}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_dtype_label.pack(anchor="w", padx=(5,0))
-        sp_rate_str_label = tk.Label(fr, text="Special Rate:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_rate_str_label.pack(anchor="w", padx=(5,0))
-        sp_rate_label = tk.Label(fr, text=f"{row[column_dict['special_rate']].lstrip()}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-        sp_rate_label.pack(anchor="w", padx=(5,0))
+    # --- special (forum layout got reworked early may 2024)
     # tags
+    tag_fr = tk.Frame(fr, bg="#ebe2c5")
+    tag_fr.pack(anchor="w")
     if row[column_dict['da']] == True:
-        da_label = tk.Label(fr, text="DA", font=bold10_font, fg="#600246", bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        da_label = tk.Label(tag_fr, text="DA", font=bold10_font, fg="#600246", bg="#ebe2c5", justify="left")
         da_label.pack(side="left", anchor="nw", padx=(5,0))
     dc_list = json.loads(row[column_dict['dc']])
     for i in dc_list:
         if i == True:
-            dc_label = tk.Label(fr, text="DC", font=bold10_font, fg="#007800", bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+            dc_label = tk.Label(tag_fr, text="DC", font=bold10_font, fg="#007800", bg="#ebe2c5", justify="left")
             dc_label.pack(side="left", anchor="nw", padx=(5,0))
         else:
-            dc_label = tk.Label(fr, text="NON-DC", font=bold10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+            dc_label = tk.Label(tag_fr, text="NON-DC", font=bold10_font, bg="#ebe2c5", justify="left")
             dc_label.pack(side="left", anchor="nw", padx=(5,0))
     if row[column_dict['dm']] == True:
-        dm_label = tk.Label(fr, text="DM", font=bold10_font, fg="#0cacaa", bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        dm_label = tk.Label(tag_fr, text="DM", font=bold10_font, fg="#0cacaa", bg="#ebe2c5", justify="left",)
         dm_label.pack(side="left", anchor="nw", padx=(5,0))
     if row[column_dict['rare']] == True:
-        rare_label = tk.Label(fr, text="RARE", font=bold10_font, fg="#ed1c24", bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        rare_label = tk.Label(tag_fr, text="RARE", font=bold10_font, fg="#ed1c24", bg="#ebe2c5", justify="left")
         rare_label.pack(side="left", anchor="nw", padx=(5,0))
     if row[column_dict['seasonal']] == True:
-        seasonal_label = tk.Label(fr, text="SEASONAL", font=bold10_font, fg="#b37400", bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        seasonal_label = tk.Label(tag_fr, text="SEASONAL", font=bold10_font, fg="#b37400", bg="#ebe2c5", justify="left")
         seasonal_label.pack(side="left", anchor="nw", padx=(5,0))
     if row[column_dict['special_offer']] == True:
-        so_label = tk.Label(fr, text="SPECIAL OFFER", font=bold10_font, fg="#ff6500", bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        so_label = tk.Label(tag_fr, text="SPECIAL OFFER", font=bold10_font, fg="#ff6500", bg="#ebe2c5", justify="left")
         so_label.pack(side="left", anchor="nw", padx=(5,0))
+    # non-inventory info
+    loc_fr = tk.Frame(fr, bg="#ebe2c5")
+    loc_fr.pack(anchor="w")
+    loc_str_label = tk.Label(loc_fr, text="Location", font=bold10_font, bg="#ebe2c5", justify="left")
+    loc_str_label.pack(side="left", anchor="nw", padx=(5,0))
+    loc_label = tk.Label(loc_fr, text=f"{row[column_dict['location_name']]}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-18*fr_padx)
+    loc_label.pack(side="left", anchor="nw", padx=(5,0))
 
 def write_callback(*args):
     global filtered_data
