@@ -3,6 +3,7 @@ from tkinter import *
 import tkinter.font as font
 import sqlite3
 import json
+import webbrowser
 
 def rb_sort(column_name):
     global data
@@ -19,15 +20,25 @@ def rb_sort(column_name):
     conn.close()
 
 def lb_item_select(event):
+    global data, filtered_data
     # get index from listbox item select
     selected_index_tuple = lb.curselection()
-    selected_index = selected_index_tuple[0]
-    if selected_index:
+    if selected_index_tuple:
+        selected_index = selected_index_tuple[0]
         if en_text.get() == "":
             item_row = data[selected_index]
         else:
             item_row = filtered_data[selected_index]
         create_labels(item_row)
+
+def open_link(link):
+    webbrowser.open(link)
+
+def on_enter(event):
+    event.widget.config(foreground="blue")
+
+def on_leave(event):
+    event.widget.config(foreground="black")
 
 def create_labels(row):
     # destroy all child widget before creating labels
@@ -36,8 +47,12 @@ def create_labels(row):
         i.destroy()
     frame_labels = []
     # name
-    name_label = tk.Label(fr, text=f"{row[column_dict['name']]}", font=name_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+    name_label = tk.Label(fr, text=f"{row[column_dict['name']]}", font=name_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx, cursor="hand2")
     name_label.pack(anchor="w", padx=5, pady=(5, 0))
+    name_label.bind("<Enter>", on_enter)
+    name_label.bind("<Leave>", on_leave)
+    # name_label.config(command=open_link(row[column_dict['link']]))
+    name_label.bind("<Button-1>", lambda event: open_link(row[column_dict['link']]))
     # weapon type and level
     type_label = tk.Label(fr, text=f"{row[column_dict['item_type']].strip()}, Lvl {row[column_dict['level']]}", font=bold12_font, fg="#007800", bg="#ebe2c5")
     type_label.pack(anchor="w", padx=5)
@@ -45,10 +60,11 @@ def create_labels(row):
     desc_label = tk.Label(fr, text=f"{row[column_dict['description']].strip()}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
     desc_label.pack(anchor="w", padx=5)
     # damage and element
-    dmg_str_label = tk.Label(fr, text="Damage:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-    dmg_str_label.pack(anchor="w", padx=(5,0))
-    dmg_label = tk.Label(fr, text=f"{row[column_dict['damage_min']]}-{row[column_dict['damage_max']]}{row[column_dict['element']]}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
-    dmg_label.pack(anchor="w", padx=(5,0))
+    if row[column_dict['damage_min']]:
+        dmg_str_label = tk.Label(fr, text="Damage:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        dmg_str_label.pack(anchor="w", padx=(5,0))
+        dmg_label = tk.Label(fr, text=f"{row[column_dict['damage_min']]}-{row[column_dict['damage_max']]}{row[column_dict['element']]}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
+        dmg_label.pack(anchor="w", padx=(5,0))
     # rarity
     rrt_str_label = tk.Label(fr, text="Rarity:", font=bold12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-4*fr_padx)
     rrt_str_label.pack(anchor="w", padx=(5,0))
