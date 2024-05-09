@@ -51,7 +51,6 @@ def create_labels(row):
     name_label.pack(anchor="w", padx=5, pady=(5, 0))
     name_label.bind("<Enter>", on_enter)
     name_label.bind("<Leave>", on_leave)
-    # name_label.config(command=open_link(row[column_dict['link']]))
     name_label.bind("<Button-1>", lambda event: open_link(row[column_dict['link']]))
     # weapon type and level
     type_label = tk.Label(fr, text=f"{row[column_dict['item_type']].strip()}, Lvl {row[column_dict['level']]}", font=bold12_font, fg="#007800", bg="#ebe2c5")
@@ -88,43 +87,84 @@ def create_labels(row):
     res_str_label.pack(side="left", anchor="nw", padx=(5,0))
     res_label = tk.Label(res_fr, text=f"{row[column_dict['resists']].strip()}", font=standard12_font, bg="#ebe2c5", justify="left", wraplength=fr_width-18*fr_padx)
     res_label.pack(side="left", anchor="nw", padx=(5,0))
-    # dummy label
-    dummy_label = tk.Label(fr, bg="#ebe2c5")
-    dummy_label.pack()
     # --- special (forum layout got reworked early may 2024)
     # tags
     tag_fr = tk.Frame(fr, bg="#ebe2c5")
-    tag_fr.pack(anchor="w")
+    tag_fr.pack(anchor="w", pady=20)
     if row[column_dict['da']] == True:
-        da_label = tk.Label(tag_fr, text="DA", font=bold10_font, fg="#600246", bg="#ebe2c5", justify="left")
+        da_label = tk.Label(tag_fr, text="DA", font=bold12_font, fg="#600246", bg="#ebe2c5", justify="left")
         da_label.pack(side="left", anchor="nw", padx=(5,0))
     dc_list = json.loads(row[column_dict['dc']])
     for i in dc_list:
         if i == True:
-            dc_label = tk.Label(tag_fr, text="DC", font=bold10_font, fg="#007800", bg="#ebe2c5", justify="left")
+            dc_label = tk.Label(tag_fr, text="DC", font=bold12_font, fg="#007800", bg="#ebe2c5", justify="left")
             dc_label.pack(side="left", anchor="nw", padx=(5,0))
         else:
-            dc_label = tk.Label(tag_fr, text="NON-DC", font=bold10_font, bg="#ebe2c5", justify="left")
+            dc_label = tk.Label(tag_fr, text="NON-DC", font=bold12_font, fg="#666666", bg="#ebe2c5", justify="left")
             dc_label.pack(side="left", anchor="nw", padx=(5,0))
     if row[column_dict['dm']] == True:
-        dm_label = tk.Label(tag_fr, text="DM", font=bold10_font, fg="#0cacaa", bg="#ebe2c5", justify="left",)
+        dm_label = tk.Label(tag_fr, text="DM", font=bold12_font, fg="#0cacaa", bg="#ebe2c5", justify="left",)
         dm_label.pack(side="left", anchor="nw", padx=(5,0))
     if row[column_dict['rare']] == True:
-        rare_label = tk.Label(tag_fr, text="RARE", font=bold10_font, fg="#ed1c24", bg="#ebe2c5", justify="left")
+        rare_label = tk.Label(tag_fr, text="RARE", font=bold12_font, fg="#ed1c24", bg="#ebe2c5", justify="left")
         rare_label.pack(side="left", anchor="nw", padx=(5,0))
     if row[column_dict['seasonal']] == True:
-        seasonal_label = tk.Label(tag_fr, text="SEASONAL", font=bold10_font, fg="#b37400", bg="#ebe2c5", justify="left")
+        seasonal_label = tk.Label(tag_fr, text="SEASONAL", font=bold12_font, fg="#b37400", bg="#ebe2c5", justify="left")
         seasonal_label.pack(side="left", anchor="nw", padx=(5,0))
     if row[column_dict['special_offer']] == True:
-        so_label = tk.Label(tag_fr, text="SPECIAL OFFER", font=bold10_font, fg="#ff6500", bg="#ebe2c5", justify="left")
+        so_label = tk.Label(tag_fr, text="SPECIAL OFFER", font=bold12_font, fg="#ff6500", bg="#ebe2c5", justify="left")
         so_label.pack(side="left", anchor="nw", padx=(5,0))
+    
     # non-inventory info
+    # location
     loc_fr = tk.Frame(fr, bg="#ebe2c5")
     loc_fr.pack(anchor="w")
-    loc_str_label = tk.Label(loc_fr, text="Location", font=bold10_font, bg="#ebe2c5", justify="left")
-    loc_str_label.pack(side="left", anchor="nw", padx=(5,0))
-    loc_label = tk.Label(loc_fr, text=f"{row[column_dict['location_name']]}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-18*fr_padx)
-    loc_label.pack(side="left", anchor="nw", padx=(5,0))
+    loc_str_label = tk.Label(loc_fr, text="Location:", font=bold10_font, bg="#ebe2c5", justify="left")
+    loc_str_label.grid(column=0, row=0, padx=(5,0))
+    loc_names = json.loads(row[column_dict['location_name']])
+    loc_links = json.loads(row[column_dict['location_link']])
+    for idx, ln in enumerate(loc_names):
+        loc_label = tk.Label(loc_fr, text=ln.strip(), font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-18*fr_padx)
+        loc_label.grid(column=1, row=idx, sticky="nw")
+        loc_label.bind("<Enter>", on_enter)
+        loc_label.bind("<Leave>", on_leave)
+        loc_label.bind("<Button-1>", lambda event, idx=idx: open_link(loc_links[idx]))
+    # price
+    price_fr = tk.Frame(fr, bg="#ebe2c5")
+    price_fr.pack(anchor="w")
+    price_str_label = tk.Label(price_fr, text="Price:", font=bold10_font, bg="#ebe2c5", justify="left")
+    price_str_label.grid(column=0, row=0, padx=(5,0))
+    prices = json.loads(row[column_dict['price']])
+    for idx, pr in enumerate(prices):
+        price_label = tk.Label(price_fr, text=pr.strip(), font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-18*fr_padx)
+        price_label.grid(column=1, row=idx, sticky="nw")
+    # required items
+    req_fr = tk.Frame(fr, bg="#ebe2c5")
+    req_fr.pack(anchor="w")
+    req_str_label = tk.Label(req_fr, text="Required Items:", font=bold10_font, bg="#ebe2c5", justify="left")
+    req_str_label.grid(column=0, row=0, padx=(5,0))
+    req_names = json.loads(row[column_dict['required_item_name']])
+    req_links = json.loads(row[column_dict['required_item_link']])
+    if row[column_dict['required_item_quantity']]:
+        req_qtys = json.loads(row[column_dict['required_item_quantity']])
+    for idx, rn in enumerate(req_names):
+        if req_qtys:
+            req_label = tk.Label(req_fr, text=f"{req_qtys[idx]} {rn}", font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-18*fr_padx)
+        else:
+            req_label = tk.Label(req_fr, text=rn, font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-18*fr_padx)
+        req_label.grid(column=1, row=idx, sticky="nw")
+        req_label.bind("<Enter>", on_enter)
+        req_label.bind("<Leave>", on_leave)
+        req_label.bind("<Button-1>", lambda event, idx=idx: open_link(req_links[idx]))
+    # sellback
+    sb_fr = tk.Frame(fr, bg="#ebe2c5")
+    sb_fr.pack(anchor="w")
+    sb_str_label = tk.Label(sb_fr, text="Sellback:", font=bold10_font, bg="#ebe2c5", justify="left")
+    sb_str_label.grid(column=0, row=0, padx=(5,0))
+    sellbacks = json.loads(row[column_dict['sellback']])
+    for idx, sb in enumerate(sellbacks):
+        sb_label = tk.Label(sb_fr, text=sb.strip(), font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-18*fr_padx)
+        sb_label.grid(column=1, row=idx, sticky="nw")
 
 def write_callback(*args):
     global filtered_data
