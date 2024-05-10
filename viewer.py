@@ -4,7 +4,6 @@ import tkinter.font as font
 import sqlite3
 import json
 import webbrowser
-from styles import *
 
 def rb_sort(column_name):
     global data
@@ -180,9 +179,12 @@ root = tk.Tk(className="DFCrawler")
 root.configure(bg="#eacea6")
 root.geometry("800x1200")
 
-init_fonts()
-weapon_icon = PhotoImage(file="./assets/weapon.png")
-helm_icon = PhotoImage(file="./assets/helm.png")
+# fonts
+standard10_font = font.Font(family="Helvetica", size=10)
+bold10_font = font.Font(family="Helvetica", size=10, weight="bold")
+standard12_font = font.Font(family="Helvetica", size=12)
+bold12_font = font.Font(family="Helvetica", size=12, weight="bold")
+name_font = font.Font(family="Helvetica", size=16, weight="bold")
 
 # connect to db and fetchall data
 conn = sqlite3.connect("./data/weapons.db")
@@ -197,13 +199,9 @@ columns = [i[0] for i in c.description]
 print(columns)
 column_dict = {col: index for index, col in enumerate(columns)}
 
-# ========================
-# column 0
-# ========================
-
 # create listbox
-lb = tk.Listbox(root, width=30, height=40, font=bold10_font, bg="#ebe2c5", selectbackground="#cbd8fe", selectborderwidth=2, relief="solid")
-lb.grid(column=0, row=0, sticky="nw", padx=5, pady=5)
+lb = tk.Listbox(root, width=30, height=40, font=bold10_font, bg="#ebe2c5", selectbackground="#cbd8fe", selectborderwidth=2, relief=tk.SOLID)
+lb.grid(column=0, row=0, sticky=tk.NW, padx=5, pady=5)
 for row in data:
     lb.insert(tk.END, row[column_dict["name"]])
 
@@ -216,40 +214,24 @@ fr_padx = 5
 
 # create search entry
 en_text = tk.StringVar() # tkinter StringVar for tracking search term
-en = tk.Entry(root, textvariable=en_text, width=30)
-en.grid(column=0, row=1, sticky="nw", padx=5)
+en = tk.Entry(root, textvariable=en_text, width=24)
+en.grid(column=0, row=1, sticky=tk.W, padx=5)
 en.bind("<KeyRelease>", write_callback)
-
-# create icons
-icon_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
-icon_fr.grid(column=0, row=2, sticky="nw", padx=5)
-item_type_sv = tk.StringVar()
-
-weapon_label = tk.Radiobutton(icon_fr, variable=item_type_sv, value="weapon", image=weapon_icon, indicatoron=0, borderwidth=0, highlightthickness=0)
-weapon_label.pack(side="left", anchor="nw")
-weapon_label = tk.Radiobutton(icon_fr, variable=item_type_sv, value="helm", image=helm_icon, indicatoron=0, borderwidth=0, highlightthickness=0)
-weapon_label.pack(side="left", anchor="nw")
-
-# ========================
-# column 1
-# ========================
-
-# create item details frame
-fr = tk.Frame(root, width=fr_width, height=lb_height, bg="#ebe2c5", bd=1, relief="solid")
-fr.grid(column=1, row=0, sticky="nw", padx=fr_padx, pady=5)
 
 # create sort by label
 sort_by_label = tk.Label(root, text="Sort by:", font=standard10_font, bg="#eacea6")
-sort_by_label.grid(column=1, row=1, sticky="nw", padx=5, pady=5)
+sort_by_label.grid(column=0, row=2, sticky=tk.W, padx=5, pady=5)
 
-# create radiobuttons
+# create radio buttons
 rb_column = tk.StringVar() # tkinter StringVar for tracking radio button selection
 sorting_columns = columns[0:3]
 for idx, col in enumerate(sorting_columns):    
     rb = tk.Radiobutton(root, text=col, font=standard10_font, variable=rb_column, value=col, command=lambda c=col: rb_sort(c), bg="#eacea6")
-    rb.grid(column=1, row=idx+2, sticky="nw", padx=5)
+    rb.grid(column=0, row=idx+3, sticky=tk.W, padx=5)
 
-# ========================
+# create frame to hold item details
+fr = tk.Frame(root, width=fr_width, height=lb_height, bg="#ebe2c5", bd=1, relief=tk.SOLID)
+fr.grid(column=1, row=0, sticky=tk.NW, padx=fr_padx, pady=5)
 
 # update listbox upon item selection
 lb.bind("<<ListboxSelect>>", lb_item_select)
