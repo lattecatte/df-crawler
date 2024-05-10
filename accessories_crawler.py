@@ -16,3 +16,4 @@ process.start()
 
 # save info to database
 save_to_database("accessories")
+split_accessories()
