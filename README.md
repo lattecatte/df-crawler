@@ -1,9 +1,7 @@
 # DFCrawler
----
 DFcrawler allows the user to view information on DragonFable's items taken from the DragonFable Encyclopedia section of the Battleon Forums.
 
 ## Features
----
 - crawls DragonFable Encyclopedia webpages via Scrapy
 - saves crawled date into a database via SQLite
 - access databse through user interface via Tkinter
