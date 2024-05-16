@@ -181,7 +181,12 @@ root = tk.Tk(className="DFCrawler")
 root.configure(bg="#eacea6")
 root.geometry("800x1200")
 
-init_fonts()
+# initialize fonts and images
+standard10_font = font.Font(family="Helvetica", size=10)
+bold10_font = font.Font(family="Helvetica", size=10, weight="bold")
+standard12_font = font.Font(family="Helvetica", size=12)
+bold12_font = font.Font(family="Helvetica", size=12, weight="bold")
+name_font = font.Font(family="Helvetica", size=16, weight="bold")# icons
 weapon_icon = PhotoImage(file="./assets/weapon.png")
 helm_icon = PhotoImage(file="./assets/helm.png")
 
