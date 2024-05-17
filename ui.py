@@ -10,7 +10,11 @@ def fetch_data():
     global c, data
     conn = sqlite3.connect(f"./data/{curr_item_type}.db")
     c = conn.cursor()
-    c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} ASC")
+    # name sort requires ascending order whereas stats are descending
+    if curr_sort == 'name':
+        c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} ASC")
+    else:
+        c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} DESC")
     data = c.fetchall()
     c.close()
     conn.close()
@@ -251,7 +255,6 @@ en.bind("<KeyRelease>", keyword_filter)
 icon_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
 icon_fr.grid(column=0, row=2, sticky="nw", padx=5)
 item_type_sv = tk.StringVar()
-
 item_types = ["weapons", "helms", "capes", "necklaces", "belts", "rings", "trinkets", "bracers"]
 item_images = {}
 for item_type in item_types:
@@ -273,7 +276,8 @@ sort_by_label.grid(column=1, row=1, sticky="nw", padx=5, pady=5)
 
 # create radiobuttons
 rb_column = tk.StringVar() # tkinter StringVar for tracking radio button selection
-sorting_columns = columns[0:3]
+sorting_columns = ['name', 'str', 'int', 'dex', 'crit', 'melee_def', 'block']
+print(sorting_columns)
 for idx, col in enumerate(sorting_columns):    
     rb = tk.Radiobutton(root, text=col, font=standard10_font, variable=rb_column, value=col, command=lambda c=col: item_sort(c), bg="#eacea6")
     rb.grid(column=1, row=idx+2, sticky="nw", padx=5)
