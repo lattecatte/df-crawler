@@ -6,8 +6,17 @@ import json
 import webbrowser
 from styles import *
 
+def fetch_data():
+    global c, data
+    conn = sqlite3.connect(f"./data/{curr_item_type}.db")
+    c = conn.cursor()
+    c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} ASC")
+    data = c.fetchall()
+    c.close()
+    conn.close()
+
 def keyword_filter(*args):
-    global keyword, keyworded_data
+    global keyword
     keyword = en_text.get().strip().lower()
     keyworded_data = [row for row in data if keyword in row[column_dict["name"]].lower()]
     lb.delete(0, tk.END)
@@ -15,15 +24,10 @@ def keyword_filter(*args):
         lb.insert(tk.END, row[column_dict["name"]])
 
 def item_type_filter(item_type):
-    global curr_item_type, data, keyworded_data
+    global curr_item_type, data
     curr_item_type = item_type
-    conn = sqlite3.connect(f"./data/{curr_item_type}.db")
-    c = conn.cursor()
-    c.execute(f"SELECT * FROM {curr_item_type} ORDER BY name ASC")
-    data = c.fetchall()
-    c.close()
-    conn.close()
-
+    fetch_data()
+    
     keyworded_data = [row for row in data if keyword in row[column_dict["name"]].lower()]
     lb.delete(0, tk.END)
     if keyword == "":
@@ -33,31 +37,27 @@ def item_type_filter(item_type):
         for row in keyworded_data:
             lb.insert(tk.END, row[column_dict["name"]])
         
-def rb_sort(column_name):
-    global data
-    conn = sqlite3.connect(f"./data/{curr_item_type}.db")
-    c = conn.cursor()
-    c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {column_name} ASC")
-    data = c.fetchall()
-    c.close()
-    conn.close()
+def item_sort(column_name):
+    global curr_sort, data
+    curr_sort = column_name
+    fetch_data()
+
+    keyworded_data = [row for row in data if keyword in row[column_dict["name"]].lower()]
     lb.delete(0, tk.END)
     if keyword == "":
         for row in data:
             lb.insert(tk.END, row[column_dict["name"]])
-            print("no search term")
     else:
         for row in keyworded_data:
             lb.insert(tk.END, row[column_dict["name"]])
-            print("SEARCH TERM EXISTS")
 
-
-def lb_item_select(event):
+def item_select(event):
+    keyworded_data = [row for row in data if keyword in row[column_dict["name"]].lower()]
     # get index from listbox item select
     selected_index_tuple = lb.curselection()
     if selected_index_tuple:
         selected_index = selected_index_tuple[0]
-        if en_text.get() == "":
+        if keyword == "":
             item_row = data[selected_index]
         else:
             item_row = keyworded_data[selected_index]
@@ -213,15 +213,13 @@ name_font = font.Font(family="Helvetica", size=16, weight="bold")# icons
 weapon_icon = PhotoImage(file="./assets/weapon.png")
 helm_icon = PhotoImage(file="./assets/helm.png")
 
-# connect to db and fetchall data
+# define initial sorting/filtering variables
+keyword = ""
 curr_item_type = "weapons"
 curr_sort = "name"
-conn = sqlite3.connect(f"./data/{curr_item_type}.db")
-c = conn.cursor()
-c.execute(f"SELECT * FROM {curr_item_type} ORDER BY name ASC")
-data = c.fetchall()
-c.close()
-conn.close()
+
+# connect to db and fetchall data
+fetch_data()
 
 # get columns
 columns = [i[0] for i in c.description]
@@ -277,13 +275,13 @@ sort_by_label.grid(column=1, row=1, sticky="nw", padx=5, pady=5)
 rb_column = tk.StringVar() # tkinter StringVar for tracking radio button selection
 sorting_columns = columns[0:3]
 for idx, col in enumerate(sorting_columns):    
-    rb = tk.Radiobutton(root, text=col, font=standard10_font, variable=rb_column, value=col, command=lambda c=col: rb_sort(c), bg="#eacea6")
+    rb = tk.Radiobutton(root, text=col, font=standard10_font, variable=rb_column, value=col, command=lambda c=col: item_sort(c), bg="#eacea6")
     rb.grid(column=1, row=idx+2, sticky="nw", padx=5)
 
 # ========================
 
 # update listbox upon item selection
-lb.bind("<<ListboxSelect>>", lb_item_select)
+lb.bind("<<ListboxSelect>>", item_select)
 fr.pack_propagate(False)
 
 root.mainloop()
