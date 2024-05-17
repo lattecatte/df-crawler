@@ -209,9 +209,7 @@ standard10_font = font.Font(family="Helvetica", size=10)
 bold10_font = font.Font(family="Helvetica", size=10, weight="bold")
 standard12_font = font.Font(family="Helvetica", size=12)
 bold12_font = font.Font(family="Helvetica", size=12, weight="bold")
-name_font = font.Font(family="Helvetica", size=16, weight="bold")# icons
-weapon_icon = PhotoImage(file="./assets/weapon.png")
-helm_icon = PhotoImage(file="./assets/helm.png")
+name_font = font.Font(family="Helvetica", size=16, weight="bold")
 
 # define initial sorting/filtering variables
 keyword = ""
@@ -254,10 +252,12 @@ icon_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
 icon_fr.grid(column=0, row=2, sticky="nw", padx=5)
 item_type_sv = tk.StringVar()
 
-weapon_label = tk.Radiobutton(icon_fr, variable=item_type_sv, value="weapons", command=lambda i="weapons": item_type_filter(i), image=weapon_icon, indicatoron=1, borderwidth=0, highlightthickness=0)
-weapon_label.pack(side="left", anchor="nw")
-weapon_label = tk.Radiobutton(icon_fr, variable=item_type_sv, value="helms", command=lambda i="helms": item_type_filter(i), image=helm_icon, indicatoron=1, borderwidth=0, highlightthickness=0)
-weapon_label.pack(side="left", anchor="nw")
+item_types = ["weapons", "helms", "capes", "necklaces", "belts", "rings", "trinkets", "bracers"]
+item_images = {}
+for item_type in item_types:
+    item_images[item_type] = PhotoImage(file=f"./assets/{item_type}.png")
+    item_label = tk.Radiobutton(icon_fr, variable=item_type_sv, value=item_type, command=lambda i=item_type: item_type_filter(i), image=item_images[item_type], indicatoron=0, borderwidth=0, highlightthickness=0)
+    item_label.pack(side="left", anchor="nw")
 
 # ========================
 # column 1
