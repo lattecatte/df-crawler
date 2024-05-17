@@ -6,20 +6,45 @@ import json
 import webbrowser
 from styles import *
 
-def rb_sort(column_name):
-    global init_data, data
-    conn = sqlite3.connect("./data/weapons.db")
-    c = conn.cursor()
-    c.execute(f"SELECT * FROM weapons ORDER BY {column_name} ASC")
-    init_data = c.fetchall()
-    data = init_data
+def keyword_filter(*args):
+    global filtered_data
+    search_term = en_text.get().strip().lower()
+    filtered_data = [row for row in data if search_term in row[column_dict["name"]].lower()]
+    lb.delete(0, tk.END)
+    for row in filtered_data:
+        lb.insert(tk.END, row[column_dict["name"]])
 
+def item_type_filter(item_type):
+    global data
+    curr_item_type = item_type
+    conn = sqlite3.connect(f"./data/{curr_item_type}.db")
+    c = conn.cursor()
+    c.execute(f"SELECT * FROM {curr_item_type} ORDER BY name ASC")
+    data = c.fetchall()
+    c.close()
+    conn.close()
     lb.delete(0, tk.END)
     for row in data:
         lb.insert(tk.END, row[column_dict["name"]])
-
+        
+def rb_sort(column_name):
+    global data
+    conn = sqlite3.connect(f"./data/{curr_item_type}.db")
+    c = conn.cursor()
+    c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {column_name} ASC")
+    data = c.fetchall()
     c.close()
     conn.close()
+    lb.delete(0, tk.END)
+    if en_text.get() == "":
+        for row in data:
+            lb.insert(tk.END, row[column_dict["name"]])
+            print("no search term")
+    else:
+        for row in filtered_data:
+            lb.insert(tk.END, row[column_dict["name"]])
+            print("SEARCH TERM EXISTS")
+
 
 def lb_item_select(event):
     # get index from listbox item select
@@ -168,14 +193,6 @@ def create_labels(row):
         sb_label = tk.Label(sb_fr, text=sb.strip(), font=standard10_font, bg="#ebe2c5", justify="left", wraplength=fr_width-18*fr_padx)
         sb_label.grid(column=1, row=idx, sticky="nw")
 
-def write_callback(*args):
-    global filtered_data
-    search_term = en_text.get().strip().lower()
-    filtered_data = [row for row in data if search_term in row[column_dict["name"]].lower()]
-    lb.delete(0, tk.END)
-    for row in filtered_data:
-        lb.insert(tk.END, row[column_dict["name"]])
-
 # initialize tkinter
 root = tk.Tk(className="DFCrawler")
 root.configure(bg="#eacea6")
@@ -191,9 +208,11 @@ weapon_icon = PhotoImage(file="./assets/weapon.png")
 helm_icon = PhotoImage(file="./assets/helm.png")
 
 # connect to db and fetchall data
-conn = sqlite3.connect("./data/weapons.db")
+curr_item_type = "weapons"
+curr_sort = "name"
+conn = sqlite3.connect(f"./data/{curr_item_type}.db")
 c = conn.cursor()
-c.execute("SELECT * FROM weapons ORDER BY name ASC")
+c.execute(f"SELECT * FROM {curr_item_type} ORDER BY name ASC")
 data = c.fetchall()
 c.close()
 conn.close()
@@ -224,16 +243,16 @@ fr_padx = 5
 en_text = tk.StringVar() # tkinter StringVar for tracking search term
 en = tk.Entry(root, textvariable=en_text, width=30)
 en.grid(column=0, row=1, sticky="nw", padx=5)
-en.bind("<KeyRelease>", write_callback)
+en.bind("<KeyRelease>", keyword_filter)
 
 # create icons
 icon_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
 icon_fr.grid(column=0, row=2, sticky="nw", padx=5)
 item_type_sv = tk.StringVar()
 
-weapon_label = tk.Radiobutton(icon_fr, variable=item_type_sv, value="weapon", image=weapon_icon, indicatoron=0, borderwidth=0, highlightthickness=0)
+weapon_label = tk.Radiobutton(icon_fr, variable=item_type_sv, value="weapons", command=lambda i="weapons": item_type_filter(i), image=weapon_icon, indicatoron=1, borderwidth=0, highlightthickness=0)
 weapon_label.pack(side="left", anchor="nw")
-weapon_label = tk.Radiobutton(icon_fr, variable=item_type_sv, value="helm", image=helm_icon, indicatoron=0, borderwidth=0, highlightthickness=0)
+weapon_label = tk.Radiobutton(icon_fr, variable=item_type_sv, value="helms", command=lambda i="helms": item_type_filter(i), image=helm_icon, indicatoron=1, borderwidth=0, highlightthickness=0)
 weapon_label.pack(side="left", anchor="nw")
 
 # ========================
