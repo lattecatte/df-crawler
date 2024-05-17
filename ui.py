@@ -7,15 +7,15 @@ import webbrowser
 from styles import *
 
 def keyword_filter(*args):
-    global filtered_data
-    search_term = en_text.get().strip().lower()
-    filtered_data = [row for row in data if search_term in row[column_dict["name"]].lower()]
+    global keyword, keyworded_data
+    keyword = en_text.get().strip().lower()
+    keyworded_data = [row for row in data if keyword in row[column_dict["name"]].lower()]
     lb.delete(0, tk.END)
-    for row in filtered_data:
+    for row in keyworded_data:
         lb.insert(tk.END, row[column_dict["name"]])
 
 def item_type_filter(item_type):
-    global data
+    global curr_item_type, data, keyworded_data
     curr_item_type = item_type
     conn = sqlite3.connect(f"./data/{curr_item_type}.db")
     c = conn.cursor()
@@ -23,9 +23,15 @@ def item_type_filter(item_type):
     data = c.fetchall()
     c.close()
     conn.close()
+
+    keyworded_data = [row for row in data if keyword in row[column_dict["name"]].lower()]
     lb.delete(0, tk.END)
-    for row in data:
-        lb.insert(tk.END, row[column_dict["name"]])
+    if keyword == "":
+        for row in data:
+            lb.insert(tk.END, row[column_dict["name"]])
+    else:
+        for row in keyworded_data:
+            lb.insert(tk.END, row[column_dict["name"]])
         
 def rb_sort(column_name):
     global data
@@ -36,12 +42,12 @@ def rb_sort(column_name):
     c.close()
     conn.close()
     lb.delete(0, tk.END)
-    if en_text.get() == "":
+    if keyword == "":
         for row in data:
             lb.insert(tk.END, row[column_dict["name"]])
             print("no search term")
     else:
-        for row in filtered_data:
+        for row in keyworded_data:
             lb.insert(tk.END, row[column_dict["name"]])
             print("SEARCH TERM EXISTS")
 
@@ -54,7 +60,7 @@ def lb_item_select(event):
         if en_text.get() == "":
             item_row = data[selected_index]
         else:
-            item_row = filtered_data[selected_index]
+            item_row = keyworded_data[selected_index]
         print(item_row)
         create_labels(item_row)
 
