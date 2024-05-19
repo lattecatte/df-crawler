@@ -6,6 +6,22 @@ import json
 import webbrowser
 from styles import *
 
+def fetch_init_data():
+    global c, data
+    conn = sqlite3.connect(f"./data/{curr_item_type}.db")
+    c = conn.cursor()
+    c.execute(f"PRAGMA table_info({curr_item_type})")
+    pragma = c.fetchall()
+    integer_columns = [x[1] for x in pragma if x[2].upper() == "INTEGER"]
+    non_resists_columns = ['rarity', 'level', 'damage_min', 'damage_max', 'str', 'int', 'dex', 'end', 'cha', 'luk', 'wis', 'crit', 'bonus', 'melee_def', 'pierce_def', 'magic_def', 'block', 'parry', 'dodge', 'all_resist']
+    resists_columns = list(set(integer_columns)- set(non_resists_columns))
+    print(resists_columns)
+
+    c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} ASC")
+    data = c.fetchall()
+    c.close()
+    conn.close()
+
 def fetch_data():
     global c, data
     conn = sqlite3.connect(f"./data/{curr_item_type}.db")
@@ -13,6 +29,8 @@ def fetch_data():
     # name sort requires ascending order whereas stats are descending
     if curr_sort == 'name':
         c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} ASC")
+    # elif curr_sort column's value is an integer and is not one of the standard stats (ie elif resists)
+    #   c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} + all_resist")
     else:
         c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} DESC")
     data = c.fetchall()
@@ -221,9 +239,9 @@ curr_item_type = "weapons"
 curr_sort = "name"
 
 # connect to db and fetchall data
-fetch_data()
+fetch_init_data()
 
-# get columns
+# get columns and column data types
 columns = [i[0] for i in c.description]
 print(columns)
 column_dict = {col: index for index, col in enumerate(columns)}
@@ -276,7 +294,7 @@ sort_by_label.grid(column=1, row=1, sticky="nw", padx=5, pady=5)
 
 # create radiobuttons
 rb_column = tk.StringVar() # tkinter StringVar for tracking radio button selection
-sorting_columns = ['name', 'str', 'int', 'dex', 'crit', 'melee_def', 'block']
+sorting_columns = ['name', 'str', 'fire']
 print(sorting_columns)
 for idx, col in enumerate(sorting_columns):    
     rb = tk.Radiobutton(root, text=col, font=standard10_font, variable=rb_column, value=col, command=lambda c=col: item_sort(c), bg="#eacea6")
