@@ -7,16 +7,15 @@ import webbrowser
 from styles import *
 
 def fetch_init_data():
-    global c, data
+    global c, data, resists_columns
     conn = sqlite3.connect(f"./data/{curr_item_type}.db")
     c = conn.cursor()
     c.execute(f"PRAGMA table_info({curr_item_type})")
     pragma = c.fetchall()
     integer_columns = [x[1] for x in pragma if x[2].upper() == "INTEGER"]
     non_resists_columns = ['rarity', 'level', 'damage_min', 'damage_max', 'str', 'int', 'dex', 'end', 'cha', 'luk', 'wis', 'crit', 'bonus', 'melee_def', 'pierce_def', 'magic_def', 'block', 'parry', 'dodge', 'all_resist']
-    resists_columns = list(set(integer_columns)- set(non_resists_columns))
-    print(resists_columns)
-
+    # resists_columns = list(set(integer_columns)- set(non_resists_columns))
+    resists_columns = [x for x in integer_columns if x not in non_resists_columns]
     c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} ASC")
     data = c.fetchall()
     c.close()
@@ -27,10 +26,15 @@ def fetch_data():
     conn = sqlite3.connect(f"./data/{curr_item_type}.db")
     c = conn.cursor()
     # name sort requires ascending order whereas stats are descending
-    if curr_sort == 'name':
+    if curr_sort == "name":
         c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} ASC")
-    # elif curr_sort column's value is an integer and is not one of the standard stats (ie elif resists)
-    #   c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} + all_resist")
+    elif curr_sort == "damage":
+        c.execute(f"SELECT * FROM {curr_item_type} ORDER BY damage_min + damage_max DESC")
+    elif curr_sort in resists_columns:
+        if curr_sort == "health" or curr_sort == "mana":
+            c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} + all_resist ASC")
+        else:
+            c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} + all_resist DESC")
     else:
         c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} DESC")
     data = c.fetchall()
@@ -59,7 +63,10 @@ def item_type_filter(item_type):
         for row in keyworded_data:
             lb.insert(tk.END, row[column_dict["name"]])
         
-def item_sort(column_name):
+def tag_filter():
+    pass
+
+def stat_sort(column_name):
     global curr_sort, data
     curr_sort = column_name
     fetch_data()
@@ -269,17 +276,25 @@ en = tk.Entry(root, textvariable=en_text, width=30)
 en.grid(column=0, row=1, sticky="nw", padx=5)
 en.bind("<KeyRelease>", keyword_filter)
 
-# create icons
-icon_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
-icon_fr.grid(column=0, row=2, sticky="nw", padx=5)
+# create item type filter
+it_filter_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
+it_filter_fr.grid(column=0, row=2, sticky="nw", padx=5)
 item_type_sv = tk.StringVar()
 item_types = ["weapons", "helms", "capes", "necklaces", "belts", "rings", "trinkets", "bracers"]
 item_images = {}
 for item_type in item_types:
     item_images[item_type] = PhotoImage(file=f"./assets/{item_type}.png")
-    item_label = tk.Radiobutton(icon_fr, variable=item_type_sv, value=item_type, command=lambda i=item_type: item_type_filter(i), image=item_images[item_type], indicatoron=0, borderwidth=0, highlightthickness=0)
-    item_label.pack(side="left", anchor="nw")
+    item_rb = tk.Radiobutton(it_filter_fr, variable=item_type_sv, value=item_type, command=lambda i=item_type: item_type_filter(i), image=item_images[item_type], indicatoron=0, borderwidth=0, highlightthickness=0)
+    item_rb.pack(side="left", anchor="nw")
 
+# create tag filter
+tag_filter_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
+tag_filter_fr.grid(column=0, row=3, sticky="nw", padx=5)
+tag_sv = tk.StringVar()
+tags = ["da", "dc", "dm", "rare", "sseasonal", "special_offer"]
+for tag in tags[2:]:
+    tag_rb = tk.Radiobutton(tag_filter_fr, variable=tag_sv, value=tag, command=lambda t=tag: tag_filter(t), image=PhotoImage(file=f"./assets/weapons.png"))
+    tag_rb.pack(side="left", anchor="nw")
 # ========================
 # column 1
 # ========================
@@ -293,12 +308,15 @@ sort_by_label = tk.Label(root, text="Sort by:", font=standard10_font, bg="#eacea
 sort_by_label.grid(column=1, row=1, sticky="nw", padx=5, pady=5)
 
 # create radiobuttons
-rb_column = tk.StringVar() # tkinter StringVar for tracking radio button selection
-sorting_columns = ['name', 'str', 'fire']
-print(sorting_columns)
-for idx, col in enumerate(sorting_columns):    
-    rb = tk.Radiobutton(root, text=col, font=standard10_font, variable=rb_column, value=col, command=lambda c=col: item_sort(c), bg="#eacea6")
-    rb.grid(column=1, row=idx+2, sticky="nw", padx=5)
+sort_sv = tk.StringVar() # tkinter StringVar for tracking radio button selection
+sorting_columns_row1 = ['name', 'damage', 'crit', 'bonus', 'melee_def', 'block']
+sorting_columns_row2 = ['str', 'int', 'dex', 'end', 'cha', 'luk', 'wis']
+sort_fr = tk.Frame(root, bg="#ebe2c5")
+sort_fr.grid(column=1, row=2, sticky="nw")
+
+for idx, col in enumerate(sorting_columns_row1 + resists_columns):    
+    rb = tk.Radiobutton(sort_fr, text=col, font=standard10_font, variable=sort_sv, value=col, command=lambda c=col: stat_sort(c), bg="#eacea6")
+    rb.pack(side="left", anchor="nw")
 
 # ========================
 
