@@ -63,8 +63,13 @@ def item_type_filter(item_type):
         for row in keyworded_data:
             lb.insert(tk.END, row[column_dict["name"]])
         
-def tag_filter():
-    pass
+def tag_filter(index, tag_bv):
+    global curr_tags
+    print(index)
+    curr_tags[index] = tag_bv
+    print(curr_tags)
+
+    print(curr_tags)
 
 def stat_sort(column_name):
     global curr_sort, data
@@ -243,6 +248,7 @@ name_font = font.Font(family="Helvetica", size=16, weight="bold")
 # define initial sorting/filtering variables
 keyword = ""
 curr_item_type = "weapons"
+curr_tags = [False, False, False, False, False, False]
 curr_sort = "name"
 
 # connect to db and fetchall data
@@ -279,22 +285,24 @@ en.bind("<KeyRelease>", keyword_filter)
 # create item type filter
 it_filter_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
 it_filter_fr.grid(column=0, row=2, sticky="nw", padx=5)
-item_type_sv = tk.StringVar()
+it_sv = tk.StringVar()
 item_types = ["weapons", "helms", "capes", "necklaces", "belts", "rings", "trinkets", "bracers"]
 item_images = {}
 for item_type in item_types:
     item_images[item_type] = PhotoImage(file=f"./assets/{item_type}.png")
-    item_rb = tk.Radiobutton(it_filter_fr, variable=item_type_sv, value=item_type, command=lambda i=item_type: item_type_filter(i), image=item_images[item_type], indicatoron=0, borderwidth=0, highlightthickness=0)
+    item_rb = tk.Radiobutton(it_filter_fr, variable=it_sv, value=item_type, command=lambda i=item_type: item_type_filter(i), image=item_images[item_type], indicatoron=0, borderwidth=0, highlightthickness=0)
     item_rb.pack(side="left", anchor="nw")
 
 # create tag filter
 tag_filter_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
 tag_filter_fr.grid(column=0, row=3, sticky="nw", padx=5)
-tag_sv = tk.StringVar()
-tags = ["da", "dc", "dm", "rare", "sseasonal", "special_offer"]
-for tag in tags[2:]:
-    tag_rb = tk.Radiobutton(tag_filter_fr, variable=tag_sv, value=tag, command=lambda t=tag: tag_filter(t), image=PhotoImage(file=f"./assets/weapons.png"))
-    tag_rb.pack(side="left", anchor="nw")
+tags = ["da", "dc", "dm", "rare", "seasonal", "special_offer"]
+tag_image = PhotoImage(file=f"./assets/weapons.png") # placeholder
+for idx, tag in enumerate(tags[2:]):
+    tag_bv = tk.BooleanVar()
+    tag_cb = tk.Checkbutton(tag_filter_fr, text=tag, variable=tag_bv, command=lambda i=idx, bv=tag_bv: tag_filter(i, bv.get()))
+    tag_cb.pack(side="left", anchor="nw")
+
 # ========================
 # column 1
 # ========================
