@@ -27,7 +27,7 @@ def fetch_data():
     c = conn.cursor()
     # name sort requires ascending order whereas stats are descending
     if curr_sort == "name":
-        c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} ASC")
+        c.execute(f"SELECT * FROM {curr_item_type} where {curr_tags[0]} ORDER BY {curr_sort} ASC")
     elif curr_sort == "damage":
         c.execute(f"SELECT * FROM {curr_item_type} ORDER BY damage_min + damage_max DESC")
     elif curr_sort in resists_columns:
@@ -65,11 +65,19 @@ def item_type_filter(item_type):
         
 def tag_filter(index, tag_bv):
     global curr_tags
-    print(index)
     curr_tags[index] = tag_bv
+    # curr_tags_str = 
     print(curr_tags)
-
-    print(curr_tags)
+    # fetch_data()
+    
+    # keyworded_data = [row for row in data if keyword in row[column_dict["name"]].lower()]
+    # lb.delete(0, tk.END)
+    # if keyword == "":
+    #     for row in data:
+    #         lb.insert(tk.END, row[column_dict["name"]])
+    # else:
+    #     for row in keyworded_data:
+    #         lb.insert(tk.END, row[column_dict["name"]])
 
 def stat_sort(column_name):
     global curr_sort, data
@@ -298,7 +306,7 @@ tag_filter_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
 tag_filter_fr.grid(column=0, row=3, sticky="nw", padx=5)
 tags = ["da", "dc", "dm", "rare", "seasonal", "special_offer"]
 tag_image = PhotoImage(file=f"./assets/weapons.png") # placeholder
-for idx, tag in enumerate(tags[2:]):
+for idx, tag in enumerate(tags):
     tag_bv = tk.BooleanVar()
     tag_cb = tk.Checkbutton(tag_filter_fr, text=tag, variable=tag_bv, command=lambda i=idx, bv=tag_bv: tag_filter(i, bv.get()))
     tag_cb.pack(side="left", anchor="nw")
