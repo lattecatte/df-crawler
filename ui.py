@@ -26,17 +26,18 @@ def fetch_data():
     conn = sqlite3.connect(f"./data/{curr_item_type}.db")
     c = conn.cursor()
     # name sort requires ascending order whereas stats are descending
+    curr_tag_query = f'where da = {curr_tags[0]} AND dm = {curr_tags[2]} AND rare = {curr_tags[3]} AND seasonal = {curr_tags[4]} AND special_offer = {curr_tags[5]}'
     if curr_sort == "name":
-        c.execute(f"SELECT * FROM {curr_item_type} where {curr_tags[0]} ORDER BY {curr_sort} ASC")
+        c.execute(f"SELECT * FROM {curr_item_type} {curr_tag_query} ORDER BY {curr_sort} ASC")
     elif curr_sort == "damage":
-        c.execute(f"SELECT * FROM {curr_item_type} ORDER BY damage_min + damage_max DESC")
+        c.execute(f"SELECT * FROM {curr_item_type} {curr_tag_query} ORDER BY damage_min + damage_max DESC")
     elif curr_sort in resists_columns:
         if curr_sort == "health" or curr_sort == "mana":
-            c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} + all_resist ASC")
+            c.execute(f"SELECT * FROM {curr_item_type} {curr_tag_query} ORDER BY {curr_sort} + all_resist ASC")
         else:
-            c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} + all_resist DESC")
+            c.execute(f"SELECT * FROM {curr_item_type} {curr_tag_query} ORDER BY {curr_sort} + all_resist DESC")
     else:
-        c.execute(f"SELECT * FROM {curr_item_type} ORDER BY {curr_sort} DESC")
+        c.execute(f"SELECT * FROM {curr_item_type} {curr_tag_query} ORDER BY {curr_sort} DESC")
     data = c.fetchall()
     c.close()
     conn.close()
@@ -68,16 +69,16 @@ def tag_filter(index, tag_bv):
     curr_tags[index] = tag_bv
     # curr_tags_str = 
     print(curr_tags)
-    # fetch_data()
+    fetch_data()
     
-    # keyworded_data = [row for row in data if keyword in row[column_dict["name"]].lower()]
-    # lb.delete(0, tk.END)
-    # if keyword == "":
-    #     for row in data:
-    #         lb.insert(tk.END, row[column_dict["name"]])
-    # else:
-    #     for row in keyworded_data:
-    #         lb.insert(tk.END, row[column_dict["name"]])
+    keyworded_data = [row for row in data if keyword in row[column_dict["name"]].lower()]
+    lb.delete(0, tk.END)
+    if keyword == "":
+        for row in data:
+            lb.insert(tk.END, row[column_dict["name"]])
+    else:
+        for row in keyworded_data:
+            lb.insert(tk.END, row[column_dict["name"]])
 
 def stat_sort(column_name):
     global curr_sort, data
@@ -286,19 +287,21 @@ fr_padx = 5
 
 # create search entry
 en_text = tk.StringVar() # tkinter StringVar for tracking search term
-en = tk.Entry(root, textvariable=en_text, width=30)
+en = tk.Entry(root, textvariable=en_text, width=25)
 en.grid(column=0, row=1, sticky="nw", padx=5)
 en.bind("<KeyRelease>", keyword_filter)
 
 # create item type filter
 it_filter_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
 it_filter_fr.grid(column=0, row=2, sticky="nw", padx=5)
-it_sv = tk.StringVar()
+it_sv = tk.StringVar(value="weapons")
 item_types = ["weapons", "helms", "capes", "necklaces", "belts", "rings", "trinkets", "bracers"]
-item_images = {}
+it_images = {}
+it_images_light = {}
 for item_type in item_types:
-    item_images[item_type] = PhotoImage(file=f"./assets/{item_type}.png")
-    item_rb = tk.Radiobutton(it_filter_fr, variable=it_sv, value=item_type, command=lambda i=item_type: item_type_filter(i), image=item_images[item_type], indicatoron=0, borderwidth=0, highlightthickness=0)
+    it_images[item_type] = PhotoImage(file=f"./assets/{item_type}.png")
+    it_images_light[item_type] = PhotoImage(file=f"./assets/{item_type}_light.png")
+    item_rb = tk.Radiobutton(it_filter_fr, variable=it_sv, value=item_type, command=lambda i=item_type: item_type_filter(i), image=it_images_light[item_type], selectimage=it_images[item_type], indicatoron=0, borderwidth=0, highlightthickness=0)
     item_rb.pack(side="left", anchor="nw")
 
 # create tag filter
