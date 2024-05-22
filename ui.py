@@ -299,19 +299,20 @@ item_types = ["weapons", "helms", "capes", "necklaces", "belts", "rings", "trink
 it_images = {}
 it_images_light = {}
 for item_type in item_types:
-    it_images[item_type] = PhotoImage(file=f"./assets/{item_type}.png")
-    it_images_light[item_type] = PhotoImage(file=f"./assets/{item_type}_light.png")
-    item_rb = tk.Radiobutton(it_filter_fr, variable=it_sv, value=item_type, command=lambda i=item_type: item_type_filter(i), image=it_images_light[item_type], selectimage=it_images[item_type], indicatoron=0, borderwidth=0, highlightthickness=0)
+    it_images[item_type] = PhotoImage(file=f"./assets/item_type_filter/{item_type}.png")
+    it_images_light[item_type] = PhotoImage(file=f"./assets/item_type_filter/{item_type}_light.png")
+    item_rb = tk.Radiobutton(it_filter_fr, variable=it_sv, value=item_type, command=lambda i=item_type: item_type_filter(i), image=it_images[item_type], selectimage=it_images_light[item_type], indicatoron=0, borderwidth=0, highlightthickness=0)
     item_rb.pack(side="left", anchor="nw")
 
 # create tag filter
 tag_filter_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
 tag_filter_fr.grid(column=0, row=3, sticky="nw", padx=5)
 tags = ["da", "dc", "dm", "rare", "seasonal", "special_offer"]
-tag_image = PhotoImage(file=f"./assets/weapons.png") # placeholder
+tag_images = {}
 for idx, tag in enumerate(tags):
     tag_bv = tk.BooleanVar()
-    tag_cb = tk.Checkbutton(tag_filter_fr, text=tag, variable=tag_bv, command=lambda i=idx, bv=tag_bv: tag_filter(i, bv.get()))
+    tag_images[tag] = PhotoImage(file=f"./assets/tag_filter/{tag}.png")
+    tag_cb = tk.Checkbutton(tag_filter_fr, text=tag, variable=tag_bv, command=lambda i=idx, bv=tag_bv: tag_filter(i, bv.get()), image=tag_images[tag])
     tag_cb.pack(side="left", anchor="nw")
 
 # ========================
