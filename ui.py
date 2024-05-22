@@ -305,14 +305,21 @@ for item_type in item_types:
     item_rb.pack(side="left", anchor="nw")
 
 # create tag filter
-tag_filter_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
-tag_filter_fr.grid(column=0, row=3, sticky="nw", padx=5)
-tags = ["da", "dc", "dm", "rare", "seasonal", "special_offer"]
+tag_filter1_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
+tag_filter1_fr.grid(column=0, row=3, sticky="nw", padx=5)
+tag_filter2_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
+tag_filter2_fr.grid(column=0, row=4, sticky="nw", padx=5)
+tags = ["da", "dc", "dm", "seasonal", "special_offer", "rare"]
 tag_images = {}
-for idx, tag in enumerate(tags):
+for idx, tag in enumerate(tags[:4]):
     tag_bv = tk.BooleanVar()
     tag_images[tag] = PhotoImage(file=f"./assets/tag_filter/{tag}.png")
-    tag_cb = tk.Checkbutton(tag_filter_fr, text=tag, variable=tag_bv, command=lambda i=idx, bv=tag_bv: tag_filter(i, bv.get()), image=tag_images[tag])
+    tag_cb = tk.Checkbutton(tag_filter1_fr, text=tag, variable=tag_bv, command=lambda i=idx, bv=tag_bv: tag_filter(i, bv.get()), image=tag_images[tag], indicatoron=0)
+    tag_cb.pack(side="left", anchor="nw")
+for idx, tag in enumerate(tags[4:]):
+    tag_bv = tk.BooleanVar()
+    tag_images[tag] = PhotoImage(file=f"./assets/tag_filter/{tag}.png")
+    tag_cb = tk.Checkbutton(tag_filter2_fr, text=tag, variable=tag_bv, command=lambda i=idx, bv=tag_bv: tag_filter(i, bv.get()), image=tag_images[tag], indicatoron=0)
     tag_cb.pack(side="left", anchor="nw")
 
 # ========================
