@@ -25,7 +25,7 @@ def fetch_data():
     global c, data
     conn = sqlite3.connect(f"./data/{curr_item_type}.db")
     c = conn.cursor()
-    # name sort requires ascending order whereas stats are descending
+    # tag filters
     query_parts = []
     for idx, tag in enumerate(curr_tags):
         if tag == False:
@@ -38,9 +38,7 @@ def fetch_data():
         curr_tag_query = ''
     else:
         curr_tag_query = 'where ' + ' AND '.join(query_parts) 
-    print(curr_tags)
-    print(curr_tag_query)
-    # curr_tag_query = f'where da = {curr_tags[0]} AND dm = {curr_tags[2]} AND rare = {curr_tags[3]} AND seasonal = {curr_tags[4]} AND special_offer = {curr_tags[5]}'
+    # name sort requires ascending order whereas stats are descending
     if curr_sort == "name":
         c.execute(f"SELECT * FROM {curr_item_type} {curr_tag_query} ORDER BY {curr_sort} ASC")
     elif curr_sort == "damage":
@@ -119,7 +117,6 @@ def item_select(event):
         else:
             item_row = keyworded_data[selected_index]
         print(item_row)
-        print(type(item_row[column_dict["dc"]]))
         create_labels(item_row)
 
 def open_link(link):
@@ -260,7 +257,7 @@ def create_labels(row):
 # initialize tkinter
 root = tk.Tk(className="DFCrawler")
 root.configure(bg="#eacea6")
-root.geometry("800x1200")
+root.geometry("800x800")
 
 # initialize fonts and images
 standard10_font = font.Font(family="Helvetica", size=10)
@@ -288,7 +285,7 @@ column_dict = {col: index for index, col in enumerate(columns)}
 # ========================
 
 # create listbox
-lb = tk.Listbox(root, width=34, height=40, font=bold10_font, bg="#ebe2c5", selectbackground="#cbd8fe", bd=1, selectborderwidth=2, relief="solid")
+lb = tk.Listbox(root, width=34, height=30, font=bold10_font, bg="#ebe2c5", selectbackground="#cbd8fe", bd=1, selectborderwidth=2, relief="solid")
 lb.grid(column=0, row=0, sticky="nw", padx=5, pady=5)
 for row in data:
     lb.insert(tk.END, row[column_dict["name"]])
@@ -355,15 +352,35 @@ fr.grid(column=1, row=0, sticky="nw", padx=fr_padx, pady=5)
 sort_by_label = tk.Label(root, text="Sort by:", font=standard10_font, bg="#eacea6")
 sort_by_label.grid(column=1, row=1, sticky="nw", padx=5, pady=5)
 
-# create radiobuttons
-sort_sv = tk.StringVar() # tkinter StringVar for tracking radio button selection
+# create radiobuttons for sorting
+sort_sv = tk.StringVar()
 sorting_columns_row1 = ['name', 'damage', 'crit', 'bonus', 'melee_def', 'block']
 sorting_columns_row2 = ['str', 'int', 'dex', 'end', 'cha', 'luk', 'wis']
-sort_fr = tk.Frame(root, bg="#ebe2c5")
-sort_fr.grid(column=1, row=2, sticky="nw")
+sort_fr1 = tk.Frame(root, bg="#ebe2c5")
+sort_fr1.grid(column=1, row=2, sticky="nw")
+sort_fr2 = tk.Frame(root, bg="#ebe2c5")
+sort_fr2.grid(column=1, row=3, sticky="nw")
+sort_fr3 = tk.Frame(root, bg="#ebe2c5")
+sort_fr3.grid(column=1, row=4, sticky="nw")
+sort_fr4 = tk.Frame(root, bg="#ebe2c5")
+sort_fr4.grid(column=1, row=5, sticky="nw")
+sort_fr5 = tk.Frame(root, bg="#ebe2c5")
+sort_fr5.grid(column=1, row=6, sticky="nw")
 
-for idx, col in enumerate(sorting_columns_row1 + resists_columns):    
-    rb = tk.Radiobutton(sort_fr, text=col, font=standard10_font, variable=sort_sv, value=col, command=lambda c=col: stat_sort(c), bg="#eacea6")
+for idx, col in enumerate(sorting_columns_row1):    
+    rb = tk.Radiobutton(sort_fr1, text=col, font=standard10_font, variable=sort_sv, value=col, command=lambda c=col: stat_sort(c), bg="#eacea6")
+    rb.pack(side="left", anchor="nw")
+for idx, col in enumerate(sorting_columns_row2):    
+    rb = tk.Radiobutton(sort_fr2, text=col, font=standard10_font, variable=sort_sv, value=col, command=lambda c=col: stat_sort(c), bg="#eacea6")
+    rb.pack(side="left", anchor="nw")
+for idx, col in enumerate(resists_columns[:9]):    
+    rb = tk.Radiobutton(sort_fr3, text=col, font=standard10_font, variable=sort_sv, value=col, command=lambda c=col: stat_sort(c), bg="#eacea6")
+    rb.pack(side="left", anchor="nw")
+for idx, col in enumerate(resists_columns[9:18]):    
+    rb = tk.Radiobutton(sort_fr4, text=col, font=standard10_font, variable=sort_sv, value=col, command=lambda c=col: stat_sort(c), bg="#eacea6")
+    rb.pack(side="left", anchor="nw")
+for idx, col in enumerate(resists_columns[18:]):    
+    rb = tk.Radiobutton(sort_fr5, text=col, font=standard10_font, variable=sort_sv, value=col, command=lambda c=col: stat_sort(c), bg="#eacea6")
     rb.pack(side="left", anchor="nw")
 
 # ========================
