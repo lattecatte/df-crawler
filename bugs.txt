@@ -1,2 +1,2 @@
-temporary weapons like vanilla ice katana missing info on almost all columns
-check accessories as well
+weapon specials not working (code broke early may 2024 when specials formatting was changed on the forums)
+some tag detections not working (prob because <img> html tag of dm/rare images can come from multiple paths in the dom tree)
