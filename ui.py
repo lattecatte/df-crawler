@@ -26,8 +26,13 @@ def fetch_data():
     conn = sqlite3.connect(f"./data/{curr_item_type}.db")
     c = conn.cursor()
     # name sort requires ascending order whereas stats are descending
-    # curr_tag_query = 
-    curr_tag_query = f'where da = {curr_tags[0]} AND dm = {curr_tags[2]} AND rare = {curr_tags[3]} AND seasonal = {curr_tags[4]} AND special_offer = {curr_tags[5]}'
+    curr_tag_query = ''
+    print(curr_tags)
+    for idx, tag in enumerate(curr_tags):
+        if tag == False:
+            curr_tag_query = f"{tags[idx]} = False"
+    print(curr_tag_query, "kek")
+    # curr_tag_query = f'where da = {curr_tags[0]} AND dm = {curr_tags[2]} AND rare = {curr_tags[3]} AND seasonal = {curr_tags[4]} AND special_offer = {curr_tags[5]}'
     if curr_sort == "name":
         c.execute(f"SELECT * FROM {curr_item_type} {curr_tag_query} ORDER BY {curr_sort} ASC")
     elif curr_sort == "damage":
@@ -258,7 +263,7 @@ name_font = font.Font(family="Helvetica", size=16, weight="bold")
 # define initial sorting/filtering variables
 keyword = ""
 curr_item_type = "weapons"
-curr_tags = [False, False, False, False, False, False]
+curr_tags = [True, True, True, True, True, True]
 curr_sort = "name"
 
 # connect to db and fetchall data
