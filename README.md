@@ -4,9 +4,9 @@ DFcrawler is a web crawler and user interface that allows the user to view infor
 ![DFCrawler_sample](https://github.com/lattecatte/DFCrawler/assets/154484150/8110a541-269b-49f9-83dc-14c5d2376bde)
 
 ## Features
-- Crawls DragonFable Encyclopedia webpages via Scrapy.
-- Saves crawled date into a database via SQLite.
-- Access database through user interface via Tkinter.
+- Crawls the DragonFable Encyclopedia webpages via Scrapy.
+- Saves crawled data into a database via SQLite.
+- Access the database through user interface via Tkinter.
 - Allows users to filter item types and sort by various stats.
 - Links to the original DragonFable Encyclopedia pages of the item and other relevant information like its location and required items etc.
 
