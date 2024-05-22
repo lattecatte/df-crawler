@@ -26,6 +26,7 @@ def fetch_data():
     conn = sqlite3.connect(f"./data/{curr_item_type}.db")
     c = conn.cursor()
     # name sort requires ascending order whereas stats are descending
+    # curr_tag_query = 
     curr_tag_query = f'where da = {curr_tags[0]} AND dm = {curr_tags[2]} AND rare = {curr_tags[3]} AND seasonal = {curr_tags[4]} AND special_offer = {curr_tags[5]}'
     if curr_sort == "name":
         c.execute(f"SELECT * FROM {curr_item_type} {curr_tag_query} ORDER BY {curr_sort} ASC")
@@ -273,7 +274,7 @@ column_dict = {col: index for index, col in enumerate(columns)}
 # ========================
 
 # create listbox
-lb = tk.Listbox(root, width=30, height=40, font=bold10_font, bg="#ebe2c5", selectbackground="#cbd8fe", selectborderwidth=2, relief="solid")
+lb = tk.Listbox(root, width=34, height=40, font=bold10_font, bg="#ebe2c5", selectbackground="#cbd8fe", bd=1, selectborderwidth=2, relief="solid")
 lb.grid(column=0, row=0, sticky="nw", padx=5, pady=5)
 for row in data:
     lb.insert(tk.END, row[column_dict["name"]])
@@ -287,7 +288,7 @@ fr_padx = 5
 
 # create search entry
 en_text = tk.StringVar() # tkinter StringVar for tracking search term
-en = tk.Entry(root, textvariable=en_text, width=25)
+en = tk.Entry(root, textvariable=en_text, width=30)
 en.grid(column=0, row=1, sticky="nw", padx=5)
 en.bind("<KeyRelease>", keyword_filter)
 
@@ -301,7 +302,8 @@ it_images_light = {}
 for item_type in item_types:
     it_images[item_type] = PhotoImage(file=f"./assets/item_type_filter/{item_type}.png")
     it_images_light[item_type] = PhotoImage(file=f"./assets/item_type_filter/{item_type}_light.png")
-    item_rb = tk.Radiobutton(it_filter_fr, variable=it_sv, value=item_type, command=lambda i=item_type: item_type_filter(i), image=it_images[item_type], selectimage=it_images_light[item_type], indicatoron=0, borderwidth=0, highlightthickness=0)
+    item_rb = tk.Radiobutton(it_filter_fr, variable=it_sv, value=item_type, command=lambda i=item_type: item_type_filter(i),
+                             image=it_images[item_type], selectimage=it_images_light[item_type], indicatoron=0, borderwidth=0, highlightthickness=0)
     item_rb.pack(side="left", anchor="nw")
 
 # create tag filter
@@ -311,15 +313,20 @@ tag_filter2_fr = tk.Frame(root, width=lb_width, bg="#ebe2c5")
 tag_filter2_fr.grid(column=0, row=4, sticky="nw", padx=5)
 tags = ["da", "dc", "dm", "seasonal", "special_offer", "rare"]
 tag_images = {}
+tag_images_gs = {}
 for idx, tag in enumerate(tags[:4]):
-    tag_bv = tk.BooleanVar()
+    tag_bv = tk.BooleanVar(value=True)
     tag_images[tag] = PhotoImage(file=f"./assets/tag_filter/{tag}.png")
-    tag_cb = tk.Checkbutton(tag_filter1_fr, text=tag, variable=tag_bv, command=lambda i=idx, bv=tag_bv: tag_filter(i, bv.get()), image=tag_images[tag], indicatoron=0)
+    tag_images_gs[tag] = PhotoImage(file=f"./assets/tag_filter/{tag}_gs.png")
+    tag_cb = tk.Checkbutton(tag_filter1_fr, text=tag, variable=tag_bv, command=lambda i=idx, bv=tag_bv: tag_filter(i, bv.get()),
+                            image=tag_images_gs[tag], selectimage=tag_images[tag], indicatoron=0, bg="#eacea6")
     tag_cb.pack(side="left", anchor="nw")
 for idx, tag in enumerate(tags[4:]):
-    tag_bv = tk.BooleanVar()
+    tag_bv = tk.BooleanVar(value=True)
     tag_images[tag] = PhotoImage(file=f"./assets/tag_filter/{tag}.png")
-    tag_cb = tk.Checkbutton(tag_filter2_fr, text=tag, variable=tag_bv, command=lambda i=idx, bv=tag_bv: tag_filter(i, bv.get()), image=tag_images[tag], indicatoron=0)
+    tag_images_gs[tag] = PhotoImage(file=f"./assets/tag_filter/{tag}_gs.png")
+    tag_cb = tk.Checkbutton(tag_filter2_fr, text=tag, variable=tag_bv, command=lambda i=idx, bv=tag_bv: tag_filter(i, bv.get()),
+                            image=tag_images_gs[tag], selectimage=tag_images[tag], indicatoron=0, bg="#eacea6")
     tag_cb.pack(side="left", anchor="nw")
 
 # ========================
