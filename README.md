@@ -1,5 +1,6 @@
 # DFCrawler
 DFcrawler is a web crawler and user interface that allows the user to view information on DragonFable's items taken from the DragonFable Encyclopedia section of the Battleon Forums.
+![DFCrawler_sample](https://github.com/lattecatte/DFCrawler/assets/154484150/b89ff6ea-a453-4982-840d-0e5144ca0fba)
 
 ## Features
 - crawls DragonFable Encyclopedia webpages via Scrapy
