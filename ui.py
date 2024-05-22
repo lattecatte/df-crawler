@@ -26,12 +26,20 @@ def fetch_data():
     conn = sqlite3.connect(f"./data/{curr_item_type}.db")
     c = conn.cursor()
     # name sort requires ascending order whereas stats are descending
-    curr_tag_query = ''
-    print(curr_tags)
+    query_parts = []
     for idx, tag in enumerate(curr_tags):
         if tag == False:
-            curr_tag_query = f"{tags[idx]} = False"
-    print(curr_tag_query, "kek")
+            if idx == 1:
+                query_part = f"{tags[idx]} LIKE '%False%'"
+            else:
+                query_part = f"{tags[idx]} = False"
+            query_parts.append(query_part)
+    if query_parts == []:
+        curr_tag_query = ''
+    else:
+        curr_tag_query = 'where ' + ' AND '.join(query_parts) 
+    print(curr_tags)
+    print(curr_tag_query)
     # curr_tag_query = f'where da = {curr_tags[0]} AND dm = {curr_tags[2]} AND rare = {curr_tags[3]} AND seasonal = {curr_tags[4]} AND special_offer = {curr_tags[5]}'
     if curr_sort == "name":
         c.execute(f"SELECT * FROM {curr_item_type} {curr_tag_query} ORDER BY {curr_sort} ASC")
@@ -111,6 +119,7 @@ def item_select(event):
         else:
             item_row = keyworded_data[selected_index]
         print(item_row)
+        print(type(item_row[column_dict["dc"]]))
         create_labels(item_row)
 
 def open_link(link):
@@ -330,7 +339,7 @@ for idx, tag in enumerate(tags[4:]):
     tag_bv = tk.BooleanVar(value=True)
     tag_images[tag] = PhotoImage(file=f"./assets/tag_filter/{tag}.png")
     tag_images_gs[tag] = PhotoImage(file=f"./assets/tag_filter/{tag}_gs.png")
-    tag_cb = tk.Checkbutton(tag_filter2_fr, text=tag, variable=tag_bv, command=lambda i=idx, bv=tag_bv: tag_filter(i, bv.get()),
+    tag_cb = tk.Checkbutton(tag_filter2_fr, text=tag, variable=tag_bv, command=lambda i=idx+4, bv=tag_bv: tag_filter(i, bv.get()),
                             image=tag_images_gs[tag], selectimage=tag_images[tag], indicatoron=0, bg="#eacea6")
     tag_cb.pack(side="left", anchor="nw")
 
