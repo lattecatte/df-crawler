@@ -4,7 +4,6 @@ import tkinter.font as font
 import sqlite3
 import json
 import webbrowser
-from styles import *
 
 def fetch_init_data():
     global c, data, resists_columns
